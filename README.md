@@ -217,7 +217,8 @@ The orchestrator picks the right depth for the right moment.
 | `/refontaudit` | Dashboard redesign | 25 | /540 | Major redesign, "comme Linear/Vercel" |
 
 **Plus the orchestrators:**
-- `/audit-orchestrator` — Intelligent selection + 3 power levels
+- `/audit-pilot` — **Dynamic co-pilot** that watches your changes (git diff, PR scope, feature description) and intelligently selects WHICH audits to run, WHEN, with diff-aware scoping
+- `/audit-orchestrator` — Power-level selector (Quick / Standard / Forensic) + intent parser
 - `/audit-tracker` — Dashboard + freshness + setup wizard
 - `/quality-arsenal` — Master entry point that routes to the right tool
 
@@ -468,6 +469,126 @@ claude
 `/newcmd` will walk you through the 5 steps, generate a 500-800 line skill applying all DNA, register it in the bot routing, and verify the output contract. Then you can `git pr` it back to this repo.
 
 ---
+
+---
+
+## 🚁 Dynamic audit management — `/audit-pilot`
+
+`/audit-pilot` is the **AI co-pilot for the Quality Arsenal**. It's the public-facing version of how we run audits internally at Agentik OS — but generalized so any developer using Claude Code can benefit.
+
+### The problem it solves
+
+Running `/quality-arsenal full` is overkill for daily work. Running random individual audits is reactive and misses things. What you want is: **"based on what I'm currently working on, which audits matter RIGHT NOW?"**
+
+That's what `/audit-pilot` does.
+
+### How it works — the 4-layer intelligence stack
+
+#### Layer 1 — Change scope detection
+Parses one or more of: `git diff`, branch name, commit messages, PR description, ticket ID, or your own feature description. Builds a **change profile** (files, languages, subsystems, risk indicators).
+
+#### Layer 2 — Audit relevance scoring
+For each of the 18 audits, scores relevance 0–100 based on the change profile. Threshold-based selection:
+- Score ≥ 80 → **REQUIRED** (must run)
+- Score ≥ 60 → **RECOMMENDED**
+- Score ≥ 40 → **OPTIONAL**
+- Score < 40 → **SKIP**
+
+#### Layer 3 — Freshness + debounce
+Checks `audits/SYNTHESIS.md` and per-audit `verdict.json`. Skips audits that are fresh AND unrelated to the current change. Forces re-run for stale or change-touching audits. **No redundant audits.**
+
+#### Layer 4 — Smart scheduling
+Groups selected audits into execution windows:
+- `immediate` (block PR until done)
+- `before_merge` (required pre-merge)
+- `weekly` (background quality cycle)
+- `on_release` (pre-launch only)
+
+### Usage patterns
+
+```bash
+/audit-pilot              # auto-detect from git diff vs main
+/audit-pilot pr           # from current PR description + diff
+/audit-pilot commit       # from last commit message + diff
+/audit-pilot feature "implement password reset with magic link"
+/audit-pilot ticket LIN-142   # reads ticket from Linear/Jira/GitHub
+/audit-pilot since main~5     # changes since git ref
+/audit-pilot watch        # live mode, polls every 5 min
+/audit-pilot status       # what's currently recommended?
+/audit-pilot --budget=30min   # only audits fitting in 30 min
+```
+
+### Concrete example — PR with payment flow
+
+```
+You: /audit-pilot pr
+
+Pilot detects:
+  Branch: feat/stripe-checkout
+  Files: src/api/checkout.ts, src/pages/checkout.tsx, prisma/schema.prisma
+  Subsystems: payment, ui, database
+  Risk: HIGH
+
+Pilot recommends:
+  🔴 REQUIRED:
+    /secaudit  100  Payment surface + new endpoint
+    /apiaudit  100  New /api/checkout endpoint
+    /dataaudit  95  Schema migration in same PR
+  🟡 RECOMMENDED:
+    /a11yaudit  85  New checkout UI
+    /flowaudit  75  Checkout flow added
+  🟢 SKIP:
+    /uiuxaudit (fresh 3d ago, no design changes)
+    /perfaudit (no perf-impacting changes)
+    /seoaudit (no marketing pages)
+
+Estimated: 90 min parallel · 4h sequential
+```
+
+### File-to-audit mappings (the smart part)
+
+`/audit-pilot` ships with concrete file-pattern → audit mappings learned from production codebases:
+
+| Subsystem | File patterns | Mandatory audits |
+|---|---|---|
+| Auth | `src/auth/**`, `**/auth.*`, `middleware.ts` | /secaudit |
+| Payment | `**/checkout*`, `**/stripe*`, `**/payment*` | /secaudit + /apiaudit |
+| Database schema | `**/*.prisma`, `**/schema.ts`, `**/migrations/**` | /dataaudit |
+| Public API | `**/api/**`, `**/routes/**` | /apiaudit |
+| UI components | `**/*.tsx`, `**/components/**` | /a11yaudit |
+| Marketing pages | `**/(marketing)/**`, `**/(landing)/**` | /copyaudit + /seoaudit |
+| Cron/Scripts | `scripts/**`, `cron/**`, `**/*.cron` | /automationaudit |
+
+This is the codified equivalent of "what would a senior engineer instinctively check on this PR?"
+
+### Self-tuning
+
+`/audit-pilot` tracks recommendation outcomes in `audits/.pilot/log.jsonl`:
+- "When I recommended /secaudit on auth changes, P0/P1 issues found 8/10 times → boost confidence"
+- "When I recommended /uiuxaudit on backend-only PRs, P0/P1 issues found 0/10 times → reduce confidence"
+
+After 20–50 PRs the model self-calibrates to your team's actual patterns.
+
+### Integration with the rest of the arsenal
+
+```
+/audit-pilot        →  decides WHICH audits + scopes them to changed files
+       ↓
+/audit-orchestrator →  picks POWER LEVEL (quick/standard/forensic)
+       ↓
+/codeaudit, /secaudit, etc.  →  actually run the audits
+       ↓
+/audit-tracker      →  dashboard + freshness for next time
+```
+
+### Why this matters
+
+Without `/audit-pilot`, developers either:
+1. **Run nothing** because they don't know which audits matter for this PR
+2. **Run everything** wasting 4+ hours per PR
+3. **Run randomly** missing critical audits for risky changes
+
+`/audit-pilot` is the answer: **right audits, right scope, right time.**
 
 ## 🧪 The Gestalt-Popper Doctrine
 
