@@ -223,6 +223,252 @@ The orchestrator picks the right depth for the right moment.
 
 ---
 
+## 🔍 Detailed audit descriptions
+
+Each audit was created to solve a **specific real-world failure** we observed across client projects. Here's the full inventory with the "why" behind each one.
+
+### `/codeaudit` — Code architecture forensics
+**Born from**: 4 client codebases where Claude generated working code that became unmaintainable after 3 months. Function bloat, phantom dependencies, hidden coupling, dead code that compiled but never ran.
+**Solves**: Quality drift in AI-generated codebases. 23 phases including phantom detection, dependency dissection, blast-radius mapping, time-bomb hunting, git criminal profiling, behavioral fingerprinting, configuration drift detection.
+**Sweet spot**: 3–6 months post-launch, before the codebase becomes "the thing nobody wants to touch."
+**Score**: /420 normalized to /100
+
+### `/secaudit` — Security forensics (OWASP)
+**Born from**: A client shipped a SaaS with an exposed API key in JS bundle. Found 6 months later. The vanilla Claude review missed it. Vanilla security audits in vanilla Claude Code feel like "I'll check the obvious stuff" — not "I'll try to break this."
+**Solves**: OWASP Top 10, XSS (25+ payload patterns), SQL/NoSQL injection, CORS misconfig, CSP headers, IDOR detection, SSRF probing, open redirects, file upload exploits, secret leakage (env + git history + JS bundles), JWT vulnerabilities, dependency CVEs, SSL/TLS configs.
+**Sweet spot**: Pre-prod gate. NEVER skip before payment integration.
+**Score**: /400
+
+### `/uiuxaudit` — Design coherence (art director-grade)
+**Born from**: AI-generated UIs that "looked fine" but felt off. Designer instinct said "wrong" — couldn't articulate why. Pixel-spacing inconsistencies, font-stack drift across pages, component anatomy violations, Z-index logic absent.
+**Solves**: Pixel-level design coherence across pages, typography hierarchy, color system integrity, spacing rhythm, component anatomy, interaction patterns, motion design references, responsive fidelity. Thinks like Dieter Rams meets Jony Ive meets Linear's design team.
+**Sweet spot**: Pre-launch + every major redesign.
+**Score**: /420
+
+### `/flowaudit` — User journey forensics
+**Born from**: Sign-up conversion dropping mysteriously on a client SaaS. Vanilla Claude added more analytics. We added `/flowaudit` and found 4 CRITICAL dead-ends in the recovery flows (wrong-password → infinite loop, OAuth fail → blank screen, etc.).
+**Solves**: Flow mapping, state machine verification, dead-end detection, permission gap analysis, data-integrity-through-flows, onboarding completeness, cross-session continuity, error recovery paths.
+**Sweet spot**: When conversion is mysteriously bad. Before A/B testing.
+**Score**: /400
+
+### `/debugaudit` — Runtime bug hunter
+**Born from**: Console errors that nobody saw because nobody opened DevTools. Network failures swallowed. Visual regressions invisible to assertion-based tests.
+**Solves**: Console errors, network failures, visual regressions, security injections, responsive breakage, performance bottlenecks, dead features, race conditions, state corruption. Forensic-grade runtime hunting via Playwright + chaos injection.
+**Sweet spot**: Pre-release smoke. After dependency updates.
+**Score**: /360
+
+### `/featureaudit` — PRD completeness
+**Born from**: Clients saying "is the product done?" with no rigorous answer. Devs say "almost". PMs say "85%". Reality: 60% of features have edge cases unhandled, 20% are stubs.
+**Solves**: PRD gap analysis, competitive parity, feature depth scoring, discoverability, coherence between features, edge case completeness, API surface gaps, missing obvious capabilities.
+**Sweet spot**: Before "ship it" announcement.
+**Score**: /320
+
+### `/perfaudit` — Core Web Vitals + bundle + N+1
+**Born from**: "Why is my site slow?" answered with "Lighthouse says 70" by vanilla Claude. We needed: which 3 lines are responsible for the 700ms TBT? Which import adds 240KB? Which N+1 query runs 200×?
+**Solves**: All Core Web Vitals (LCP/INP/CLS), bundle size with import-by-import attribution, render performance, JavaScript execution profiling, image optimization gaps, font loading bottlenecks, caching strategy, SSR/SSG/ISR analysis, lazy loading, code splitting, API response times, N+1 query detection, memory leaks, third-party script impact.
+**Sweet spot**: Before launch. After "users say it's slow."
+**Score**: /360
+
+### `/a11yaudit` — WCAG 2.1 AA forensics
+**Born from**: Client got sued in France for non-WCAG. €25K fine. Vanilla "is this accessible?" prompts miss 80% of WCAG violations.
+**Solves**: WCAG 2.1 AA full compliance, keyboard navigation (every interactive element), screen reader testing, ARIA labels/roles/states, color contrast (4.5:1 / 3:1), focus management, skip navigation, form labels, error announcements, alt text, heading hierarchy, landmark regions, touch targets (44px), motion preferences, cognitive load, reading level.
+**Sweet spot**: Pre-launch (legal in EU/US). Quarterly recheck.
+**Score**: /320
+
+### `/seoaudit` — Search visibility + GEO/AEO
+**Born from**: "Why are we not ranking?" with 200 pages and no idea which 30 are indexed. Modern SEO requires AI-search optimization (GEO/AEO for Claude, ChatGPT, Perplexity citations) — not just Google.
+**Solves**: Crawlability, indexability, Core Web Vitals (via /perfaudit), Schema.org markup, meta tags, heading hierarchy, image SEO, URL structure, mobile-friendliness, internal/external linking, hreflang, redirect chains, JavaScript rendering, GEO/AEO (AI Overviews + ChatGPT citation patterns), competitor SERP analysis.
+**Sweet spot**: Monthly for content sites. Pre-launch for marketing sites.
+**Score**: /400
+
+### `/dataaudit` — Schema integrity + GDPR
+**Born from**: Production database with 40K orphan records, 12 broken foreign keys, RGPD non-compliance discovered during GDPR audit. Vanilla Claude can't run database integrity checks.
+**Solves**: Schema validation, migration status, orphaned records, referential integrity, data consistency, type safety (runtime vs schema), null handling, duplicate detection, cascade behavior, backup verification, query performance, index coverage, data lifecycle (TTL, archival), PII detection, seed/prod separation, transaction integrity, GDPR/RGPD compliance. DESTRUCTIVE audit — verifies backup before any write.
+**Sweet spot**: Quarterly. Always before migrations.
+**Score**: /320
+
+### `/apiaudit` — Endpoint contracts + auth matrix
+**Born from**: An API with 705 endpoints. Vanilla "review my API" output: "looks good!". Reality: 23 endpoints with no auth, 8 admin endpoints accessible from public roles, 19 endpoints with inconsistent error formats, 0 rate limits.
+**Solves**: Endpoint inventory, REST/GraphQL contract compliance, authentication matrix (every endpoint × every role), authorization, input validation, error response format, status codes, pagination, rate limiting, versioning, response time benchmarks, N+1 detection, idempotency, webhook reliability, CORS, content negotiation, API deprecation.
+**Sweet spot**: Pre-launch + every quarter.
+**Score**: /360 · Consumed by `/secaudit` for auth surface exploitation.
+
+### `/copyaudit` — Claims vs reality
+**Born from**: Marketing pages promising features the product doesn't have. CTA copy that doesn't match what happens next. Legal claims that aren't true.
+**Solves**: Headline clarity (5-second test), value proposition accuracy, CTA effectiveness, claim verification (promises vs reality, with screenshots), tone consistency, technical accuracy, grammar/spelling, reading level (Flesch-Kincaid), SEO keyword integration, social proof accuracy, legal compliance, microcopy (buttons, errors, empty states), accessibility of copy, brand voice adherence, i18n wrapping detection.
+**Sweet spot**: Before any marketing push. Quarterly tone-drift check.
+**Score**: /280
+
+### `/dxaudit` — Developer experience
+**Born from**: New devs taking 2 weeks to ship their first PR because the README was outdated, the setup steps were broken, and the error messages were cryptic.
+**Solves**: README quality (can a new dev start in <10 min?), setup complexity, error message quality, TypeScript strictness, code documentation (JSDoc), testing infrastructure, CI/CD pipeline quality, PR template, dependency management, monorepo structure, dev tooling (linting, formatting, pre-commit), environment parity, debug tooling, migration guides, changelog, contribution guide.
+**Sweet spot**: Before hiring. Before open-sourcing.
+**Score**: /320
+
+### `/motionaudit` — Animation design forensics
+**Born from**: An app that "felt cheap" because all animations were 300ms linear ease. No motion DNA. No choreography. No respect for reduced-motion preferences.
+**Solves**: CSS transitions, JS animations, WebGL effects, scroll-driven choreography, P5.js/canvas, page transitions, micro-interactions, loading sequences, easing systems, duration consistency, choreography composition, reduced-motion compliance, mobile motion, brand motion DNA, performance budget.
+**Sweet spot**: Post-launch polish phase. Brand redesigns.
+**Score**: /360 · ABORTS on non-UI projects (CLI/library/headless).
+
+### `/automationaudit` — Cron + scripts + daemons
+**Born from**: A client's nightly backup cron had been silently failing for 4 months. Logs ignored. Nobody noticed until the backup was needed.
+**Solves**: Cron jobs, shell scripts, Python scripts, daemons, systemd timers, CI/CD pipelines, dispatch chains, orchestration logic, scheduling order, dependency graphs, error recovery, log rotation, dead automations, race conditions between scheduled tasks, secret exposure in scripts, idempotency violations, silent failures, monitoring gaps.
+**Sweet spot**: After any infra migration. Quarterly health check.
+**Score**: /330
+
+### `/logicaudit` — Architecture optimality
+**Born from**: A function called 5 times that should have been called once. A retry logic with infinite recursion under specific timeout. An algorithm with O(n²) when O(n log n) was trivial. Vanilla Claude can write all three.
+**Solves**: Redundant logic, suboptimal algorithms, wasted computation, architectural bottlenecks, unnecessary complexity, missed abstractions, pipeline inefficiencies, orchestration waste, data flow entropy, configuration drift, dead paths, over-engineering, under-engineering, state machine defects, retry/fallback anti-patterns, caching opportunities, parallelization gaps, single-threaded bottlenecks. Think like Einstein — simplify everything.
+**Sweet spot**: When the system feels "complex without reason".
+**Score**: /360
+
+### `/retentionaudit` — Product/CPO frameworks (READ-ONLY)
+**Born from**: Founders asking "what should I build next?" — Vanilla Claude says "more features!" We needed: which feature actually retains users? Which removes which friction? What does a $1B SaaS CPO see that we don't?
+**Solves**: User-journey gaps via 4 expert frameworks — Hooked (Eyal), Jobs-To-Be-Done (Christensen), Power of Moments (Heath), Fogg B=MAT. Inventories: drop-off forensics, aha-moment latency, hook strength, personalization debt, onboarding completeness, empty-states, network effects, sales angles, monetization hooks, friction surfaces, reactivation flows, community surfaces, discoverability, power-user delight. Outputs RICE-prioritized roadmap with Fogg adoption likelihood per top idea.
+**Sweet spot**: Before sprint planning. Quarterly product review.
+**Score**: /400 · **READ-ONLY** — proposes only, never edits code.
+
+### `/refontaudit` — Dashboard redesign engine
+**Born from**: Clients saying "I want it like Linear/Vercel/Stripe/ElevenLabs" — vague aspiration, no rigorous path. Three modes evolved: EVOLUTION (surgical improvement when salvageable), REVOLUTION (ground-up when unsalvageable), VERIFY (post-impl measurement).
+**Solves**: 25-phase pipeline scored /540: Keep-Audit (classifies each component KEEP/IMPROVE/RETHINK/KILL), Component Forge (writes real shadcn code), reference pattern matching against shadcn official blocks (via Context7 MCP) + product design knowledge. Confidence score per proposal.
+**Sweet spot**: When the current dashboard "doesn't cut it" anymore.
+**Score**: /540
+
+---
+
+## 🏗️ Audit categories — Programmatic, Agentic, Hybrid
+
+Not all audits are the same kind of beast. Three distinct categories run in the arsenal, each with strengths and trade-offs:
+
+### 🤖 AGENTIC — Pure LLM scrutiny
+**How it works**: The LLM IS the auditor. Reads code/docs, applies frameworks, generates falsifiable findings. Zero deterministic tools beyond reading files.
+**Strengths**: Contextual nuance (frameworks like JTBD/Hooked), cross-cutting insights, finds things linters can't (architectural intent, narrative coherence).
+**Weaknesses**: Reproducibility limited by model temperature, hallucinates if scope unclear.
+**Audits in this category**:
+- `/codeaudit` — pure code reading + pattern recognition
+- `/logicaudit` — architectural reasoning, no tools
+- `/featureaudit` — PRD↔code mapping, judgment-heavy
+- `/retentionaudit` — pure framework application (4 expert lenses)
+- `/dxaudit` — reads docs/README, judges experience
+- `/copyaudit` — tone + claims verification (partial Flesch via script)
+
+### ⚙️ PROGRAMMATIC — Deterministic tooling
+**How it works**: Runs scripts (Lighthouse, axe-core, gitleaks, ESLint, etc.) and emits raw machine output. The LLM only synthesizes results.
+**Strengths**: 100% reproducible, fast, catches what tools were built to catch.
+**Weaknesses**: Misses semantic issues, misses things that need judgment.
+**Note**: No audit in the arsenal is 100% programmatic — they all use the LLM for synthesis and prioritization. The "most programmatic" ones lean on tooling for raw findings.
+**Most-programmatic audits**:
+- (`/a11yaudit` and `/perfaudit` lean heavy on axe-core + Lighthouse outputs)
+- (`/secaudit` leans on gitleaks + npm-audit + dependency CVE DBs)
+
+### 🧬 HYBRID — Tooling + LLM judgment (the majority)
+**How it works**: Programmatic tools generate the raw data → LLM applies senior-engineer scrutiny on top (prioritization, cross-finding correlation, falsification, fix planning).
+**Strengths**: Combines deterministic catch-rate with semantic judgment. Best of both worlds.
+**Weaknesses**: More complex pipelines, more failure modes.
+**Audits in this category**:
+- `/perfaudit` — Lighthouse + bundle analyzer + LLM root-cause attribution
+- `/a11yaudit` — axe-core + Playwright + LLM contextual fixes
+- `/seoaudit` — crawlers + Lighthouse + LLM strategy
+- `/secaudit` — gitleaks + dep-audit + LLM OWASP analysis
+- `/uiuxaudit` — Playwright screenshots + LLM design critique
+- `/motionaudit` — Playwright video + LLM choreography analysis
+- `/flowaudit` — Playwright user journeys + LLM dead-end detection
+- `/dataaudit` — DB queries + LLM schema review
+- `/apiaudit` — endpoint scanner + LLM contract analysis
+- `/debugaudit` — Playwright runtime + console scraping + LLM
+- `/automationaudit` — crontab + ps + LLM correlation
+- `/refontaudit` — Playwright screenshots + Context7 MCP + LLM redesign
+
+### Decision matrix — which category to trust?
+
+| Question | Best category |
+|---|---|
+| "Will this fail OWASP scan?" | Hybrid (tools find known patterns + LLM finds variants) |
+| "Is the architecture sound?" | Agentic (judgment > tool can give) |
+| "What's the LCP value?" | Programmatic (tool gives ground truth) |
+| "Why is LCP 4.2s?" | Hybrid (tool measures + LLM diagnoses) |
+| "Should I build feature X?" | Agentic (no tool can answer) |
+| "Is there a memory leak?" | Hybrid (tool detects + LLM root-causes) |
+
+---
+
+## 🔨 How audits are created — the `/newcmd` forge
+
+Every audit in this arsenal was forged with the **same skill engineering protocol**: `/newcmd`. It's the meta-skill that builds skills. Open-source, lives in this repo at `audits/newcmd.md`.
+
+### Why a forge for skills
+
+Without a standard, every skill drifts into its own format. With `/newcmd`, every skill we ship carries the **same Quality DNA** — making them reliable, swappable, composable.
+
+### The 4 skill types
+
+`/newcmd` classifies any new skill into one of 4 types:
+
+1. **TYPE 1 — Forensic Audit** (scored, multi-phase, auto-fix). All 18 audits in this repo are Type 1.
+2. **TYPE 2 — Creative Pipeline** (multi-stage, iterative). E.g. `/vision`, `/deepux`, `/brand-identity`.
+3. **TYPE 3 — Workflow Orchestrator** (multi-step, dependencies). E.g. `/build`, `/planner`, `/linear-fix`.
+4. **TYPE 4 — Focused Tool** (single purpose, fast). E.g. `/reader`, `/tunnel`.
+
+### The 8 universal Quality DNA elements
+
+Every skill (audit or not) must have these 8 elements:
+
+| # | Element | Why |
+|---|---|---|
+| 1 | **Identity** — specific expert persona, not "generic assistant" | Without identity, output is generic |
+| 2 | **Scope Detection** — parse intent from user prompt | Don't ask, deduce |
+| 3 | **Hinge Moment** — the ONE thing that determines success | 50% effort on the hinge, 50% on everything else |
+| 4 | **Input/Output Contract** — what goes in, what comes out, where | A skill with hidden outputs is useless |
+| 5 | **Progressive Depth** — simple → advanced from same command | New users get simple, power users get depth |
+| 6 | **Verification Gate** — self-check before reporting done | "Done" without verification = lie |
+| 7 | **Integration** — when to use before/after, complementary skills | Skills in isolation are tools; in context they're a system |
+| 8 | **Domain Expertise** — specific checks, not "look for issues" | Generic = generic results |
+
+### The 4 audit-specific DNA additions (Type 1 only)
+
+On top of the 8 universal elements, audit skills add:
+
+1. **Popper Falsification** — every phase asks "where does this claim diverge from reality?"
+2. **Scoring Matrix** — phases weighted by user impact, total 300–540, normalized to /100
+3. **Auto-Fix Pipeline** — Audit → Plan → Fix → Re-audit until target score or 3-cycle cap
+4. **Parallel Execution** — phases grouped into 4–5 waves for max parallelism
+
+### The 5-step skill creation process (used to build every audit)
+
+```
+1. UNDERSTAND  → 1–2 questions max; identify type + domain + expected output
+2. RESEARCH    → read 2-3 existing skills of same type, identify domain best practices, find the HINGE MOMENT
+3. GENERATE    → write the skill applying ALL DNA elements (500-800 lines for audits)
+4. REGISTER    → Oracle routing rules + CLAUDE.md + Telegram bot handlers + AISB docs
+5. QUALITY GATE → 9-point checklist before "done" (file exists, DNA complete, hinge nailed, etc.)
+```
+
+### How quality is enforced
+
+Every audit's quality is bound by a **6-criterion contract**:
+
+| Criterion | Enforcement |
+|---|---|
+| **Output contract** | 8 files (`verdict.json`, `REPORT.md`, `fix-plan.json`, `fix-plan.md`, `iterations.md`, `progress.json`, `telemetry.json`, `fix-log.md`). Missing files = audit NOT successful. See `AUDIT-VERIFICATION-CONTRACT.md`. |
+| **Score determinism** | Same input → same `verdict.json` (within model temperature noise) |
+| **Falsifiability** | Every finding has a "test Y to verify X" clause |
+| **Auto-fix loop** | Max 3 cycles, then user-gate the rest |
+| **Hinge point coverage** | Top 5 findings get 10× scrutiny |
+| **Cross-audit consistency** | Reads/writes via DAG (apiaudit↔dataaudit, etc.) |
+
+### Want to add your own audit?
+
+```bash
+claude
+> /newcmd
+> "I want to audit i18n translation completeness across our codebase"
+```
+
+`/newcmd` will walk you through the 5 steps, generate a 500-800 line skill applying all DNA, register it in the bot routing, and verify the output contract. Then you can `git pr` it back to this repo.
+
+---
+
 ## 🧪 The Gestalt-Popper Doctrine
 
 Every audit shares one philosophy, encoded in `audits/QUALITY-ARSENAL-PREAMBLE.md`:
