@@ -39,7 +39,9 @@ FIX_LEFTOVER = re.compile(r"FIX EXECUTION / RE-AUDIT phases below")
 META_REQUIRE = re.compile(
     r"(?<![Nn]ot )(?<!not )Read `~/\.claude/audit-meta-protocol-v2\.md`"
 )
-A11Y_TRUNCATED = re.compile(r"contrast,\s*2\.\s*$", re.M)
+A11Y_TRUNCATED = re.compile(
+    r"contrast,\s*2\.(\s|$)|Keyboard, screen readers, contrast, 2\."
+)
 RETENTION_UNLESS_FIX = re.compile(r"unless.{0,40}--fix", re.I)
 
 
@@ -77,11 +79,9 @@ def main() -> int:
         if path.name == "secaudit.md":
             if "full raw max 460" not in text and "full applicable max  = 460" not in text:
                 errors.append(f"{rel}: secaudit must declare full raw max 460")
-            # 420 may appear only as the rejected number, never as this audit's max.
             for i, line in enumerate(text.splitlines(), 1):
-                if "420" in line and "never" not in line.lower() and "do not use" not in line.lower() and "not use" not in line.lower():
-                    if "max" in line.lower() or "raw" in line.lower():
-                        errors.append(f"{rel}:{i}: secaudit still treats 420 as a live max")
+                if "420" in line:
+                    errors.append(f"{rel}:{i}: secaudit must not mention 420; only 460 / 400")
 
     skills = ROOT / "skills"
     a11y = skills / "a11yaudit" / "SKILL.md"

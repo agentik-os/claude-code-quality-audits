@@ -1376,7 +1376,7 @@ Phases 25–27 (v1.3, when applicable): 20 raw each = +60 → **full raw max 460
 If no in-app LLM/MCP/secrets surface, mark 25–27 N/A and applicable_raw_max = 400.
 
 NORMALIZE: score = round((raw / applicable_raw_max) × 100)
-applicable_raw_max is 460 when 25–27 apply, else 400. Do not use 420.
+applicable_raw_max is 460 when 25–27 apply, else 400.
 
 GRADE:
   90-100: S — Fortress. Defense-in-depth, zero known vectors, incident-ready.
@@ -1698,7 +1698,7 @@ Inventory product features that call a model or ingest untrusted text into a pro
 | LLM09 Misinformation | Ungrounded answers presented as product truth (copyaudit may share) |
 | LLM10 Unbounded Consumption | Missing token/cost/rate caps on model calls |
 
-`check_kind` required. Score this phase 0–20. Full raw max is **460** (400 + 20 + 20 + 20) when Phases 25–27 apply. If no LLM/MCP/secrets surface, mark 25–27 N/A and keep applicable_raw_max **400**. Never 420.
+`check_kind` required. Score this phase 0–20. Full raw max is **460** (400 + 20 + 20 + 20) when Phases 25–27 apply. If no LLM/MCP/secrets surface, mark 25–27 N/A and keep applicable_raw_max **400**.
 
 ### PHASE 26 — IN-APP MCP / TOOL CONNECTORS
 
@@ -1736,7 +1736,6 @@ Honest raw max:
   phases 25+26+27      = 20 + 20 + 20 = 60
   full applicable max  = 460
   no LLM/MCP/secrets   = 400 (25–27 N/A)
-  never                = 420
 
 NORMALIZE: round(raw / applicable_raw_max * 100)
 verdict.json.preamble_version = "2.0"

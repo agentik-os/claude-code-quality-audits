@@ -1,16 +1,20 @@
 ---
 name: a11yaudit
 description: >
-  WCAG 2.2 AA accessibility forensic audit. Use when the user wants keyboard
-  navigation, screen-reader checks, contrast, and WCAG 2.2 criteria (focus not
-  obscured, target size minimum, accessible authentication). READ-ONLY. Loads
-  audits/a11yaudit.md. One AGK Audit face — do not spawn a dedicated chat.
+  WCAG 2.2 AA accessibility forensic audit covering keyboard navigation,
+  screen readers, contrast, and the WCAG 2.2 criteria 2.4.11 Focus Not
+  Obscured, 2.5.7 Dragging Movements, 2.5.8 Target Size (Minimum),
+  3.2.6 Consistent Help, 3.3.7 Redundant Entry, and 3.3.8 Accessible
+  Authentication. READ-ONLY. Loads audits/a11yaudit.md. One AGK Audit
+  face — do not spawn a dedicated chat.
 ---
 
 # a11yaudit — skill wrapper
 
 ## When to use
-Keyboard, screen readers, contrast, WCAG 2.2 AA (including 2.4.11, 2.5.7, 2.5.8, 3.2.6, 3.3.7, 3.3.8).
+WCAG 2.2 AA: keyboard, screen readers, contrast, plus 2.4.11 Focus Not
+Obscured, 2.5.7 Dragging Movements, 2.5.8 Target Size (Minimum),
+3.2.6 Consistent Help, 3.3.7 Redundant Entry, and 3.3.8 Accessible Authentication.
 
 ## When not to use
 Visual design only → uiuxaudit.
