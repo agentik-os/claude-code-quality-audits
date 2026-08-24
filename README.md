@@ -47,7 +47,7 @@ The long forensic bodies stay in `audits/*.md`. Skills are short wrappers (name,
 
 This README will not invent replacement percentages.
 
-**What is specified (protocol, not performance):** Gestalt-Popper doctrine, scored `verdict.json`, 8-file output contract, cross-audit DAG, scoped flags, one-tenant-per-run, optional `--fix` that is never the default.
+**What is specified (protocol, not performance):** Gestalt-Popper doctrine, scored `verdict.json`, 8-file output contract, cross-audit DAG, scoped flags, one-tenant-per-run, READ-ONLY AGK Audit (apply is a different agent).
 
 ---
 
@@ -79,7 +79,7 @@ The auditor must not be the fixer in the same session. Auto-fix-in-the-same-sess
 | **Builder** | Omega workers (`claude` \| `codex` \| `glm`) or **Cursor Cloud on CLIENT** | Apply the handoff. CLIENT workloads never run on Omega. |
 | **Re-auditor** | Fresh session, same protocol | Re-run scoped audits on the Builder diff. |
 
-`--fix` remains **documented and optional**. It is never the default. Use it only when a human explicitly accepts the conflict (solo dogfood, no second agent available). `/retentionaudit` stays proposal-only even with `--fix`. `/agentaudit` never applies harness patches in-session.
+There is **no `--fix` path on AGK Audit**. A flag or a chat “yes” is not enough for destructive apply. `/retentionaudit` is always proposal-only. `/agentaudit` never applies harness patches.
 
 ---
 
@@ -144,13 +144,13 @@ audit-pilot pr                   # maps diff → which audits (chooser)
 quality-arsenal go-live          # secaudit + agentaudit + a11yaudit + perfaudit + dataaudit
 ```
 
-`--fix` is opt-in and must be spelled. Bare invocations are READ-ONLY.
+All invocations are READ-ONLY. Apply is a Builder (different agent).
 
 ---
 
 ## Three power levels (findings depth — not fix depth)
 
-The orchestrator picks **how deep to look**. Fixing is a separate handoff unless `--fix` was explicit.
+The orchestrator picks **how deep to look**. Fixing is always a separate Builder.
 
 ### Quick (5–15 min)
 - Top findings only; skip Plan execution
@@ -274,13 +274,13 @@ your-project/
 
 8-file contract: `verdict.json`, `REPORT.md` (or `verdict.md`), `fix-plan.json`, `fix-plan.md`, `iterations.md`, `progress.json`, `telemetry.json`, `fix-log.md` (empty in READ-ONLY). See `audits/AUDIT-VERIFICATION-CONTRACT.md`.
 
-In READ-ONLY, `fix-plan.*` is a **Builder packet**, not a log of edits applied. `fix-log.md` records "no product files modified" or the `--fix` exception.
+`fix-plan.*` is a **Builder packet**, not a log of edits applied. `fix-log.md` records `no product files modified`.
 
 ---
 
 ## Safety
 
-- **READ-ONLY default** — no product edits unless `--fix`
+- **READ-ONLY** — AGK Audit never edits product code/schema
 - **No exploit PoCs** — especially `/secaudit` and `/agentaudit`
 - **One tenant per run** — no sibling-client secrets
 - **CLIENT never on Omega**
@@ -299,7 +299,7 @@ In READ-ONLY, `fix-plan.*` is a **Builder packet**, not a log of edits applied. 
 
 1. Popper falsification
 2. Scoring matrix
-3. **Plan + Builder handoff** (not same-session auto-fix). `--fix` is optional and declared.
+3. **Plan + Builder handoff** (no `--fix` on AGK Audit)
 4. Parallel waves **within one face** (respect the 50-agent cap)
 
 ---

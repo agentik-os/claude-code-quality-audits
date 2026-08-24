@@ -1,0 +1,17 @@
+name: ADR-001 readonly gate
+
+on:
+  pull_request:
+  push:
+    branches: [main, cursor/agentic-2026-challenge-eeeb]
+
+jobs:
+  readonly:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Fail on Write/Edit defaults or payload catalogs
+        run: python3 scripts/check-readonly-arsenal.py

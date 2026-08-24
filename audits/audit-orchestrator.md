@@ -32,7 +32,7 @@ RIGHT audits at the RIGHT power level, dispatch them, and synthesize results.
 
 ## The 19 audits in the Quality Arsenal
 
-Default: READ-ONLY. `--fix` never implied by power level.
+AGK Audit is READ-ONLY. There is no `--fix` path. Power level is depth of looking, not license to apply.
 
 | Audit | Domain | When to pick |
 |---|---|---|
@@ -64,7 +64,7 @@ Default: READ-ONLY. `--fix` never implied by power level.
 - Use case: gut-check before a meeting, fast triage
 
 ### 🎯 Level 2 — Standard (30-60 min, DEFAULT)
-- Full phases: Audit → Plan (**Builder handoff**). Apply only if `--fix`.
+- Full phases: Audit → Plan (**Builder handoff**). Never apply.
 - Score normalized /100
 - Output: complete `audits/.{name}audit/verdict.json` + reports
 - Use case: regular quality cycle, pre-PR validation
@@ -72,7 +72,7 @@ Default: READ-ONLY. `--fix` never implied by power level.
 ### 🔬 Level 3 — Forensic (1-4h per audit)
 - Full Gestalt-Popper protocol, all phases extended
 - Plan every finding P0/P1/P2 for a Builder
-- Re-audit in a **fresh session** (or 3-cycle cap if `--fix` was explicit)
+- Re-audit in a **fresh session** after a Builder lands
 - Output: forensic-grade with falsification proofs + telemetry
 - Use case: pre-launch, security/compliance gate, "make it bulletproof"
 

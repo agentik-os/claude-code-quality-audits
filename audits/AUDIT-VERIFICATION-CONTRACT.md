@@ -19,9 +19,10 @@ description: >
 > documented mandatory minimums (phase count, score normalization, Phase N-1
 > / N+4), clarified the 16 Quality Arsenal skills the contract applies to.
 >
-> **v2.0 changelog (2026-08-24):** READ-ONLY is the default. Fix phases (N through N+4)
-> apply **only** when `--fix` was explicit. Otherwise emit the plan and stop.
-> Re-audit after a Builder lands is a **fresh session**. Writer-done is not done.
+> **v2.1 changelog (2026-08-24):** AGK Audit has **no `--fix` path**. Fix phases
+> (N through N+4 apply) are **Builder-only**, a different agent. This auditor
+> emits the plan and stops. Re-audit after a Builder lands is a **fresh session**.
+> Writer-done is not done.
 > `/agentaudit` added (hinge: HINGE AGENT PATH). `/a11yaudit` hinge unchanged; WCAG 2.2 AA.
 > Dual runtime (Claude commands + Cursor/Grok skills). One tenant per run.
 
@@ -40,7 +41,7 @@ violating any of them is not compliant and fails `/metaudit`.
 | 4 | **Score normalized to /100** (raw may be /100, /320, /360, /420, /540 — must include normalization formula `raw / max * 100 = /100`) | Cross-skill comparison |
 | 5 | **HINGE {DOMAIN}** identification before Phase 1 (10× scrutiny on the one thing that dominates the domain's risk/value) | Gestalt clarity gate — not all phases equal |
 | 6 | **Popper falsification** in each scored item (how would you disprove this claim?) | Epistemic rigor — prevents confirmation bias |
-| 7 | **Plan + Builder handoff** (default). `--fix` loop only if explicit, max **3** same-session then stop. Re-audit = fresh session. | Auditor ≠ fixer. Prevents conflict of interest and infinite loops |
+| 7 | **Plan + Builder handoff only.** No same-session apply on AGK Audit. Re-audit = fresh session. | Auditor ≠ fixer |
 | 9 | **`mode` + `tenant` in verdict.json** | Tenancy + READ-ONLY contract |
 | 10 | **RED:** secaudit/agentaudit never emit exploit PoCs | 2026 agentic safety |
 | 8 | **Final verdict gate** blocks 100/100 claim unless `before-after.md` shows 0 regressions | Contract enforcement |
@@ -81,9 +82,9 @@ document it in the Gestalt section (Phase 0), and never drift from it.
 
 ---
 
-## READ-ONLY DEFAULT (v2)
+## READ-ONLY (v2.1 — AGK Audit)
 
-If `--fix` is **absent**, skip Phase N (apply), N+1, N+2, N+3. Still produce:
+Skip Phase N (apply), N+1, N+2, N+3 on this agent. Always produce:
 
 - `fix-plan.json` / `fix-plan.md` as a **Builder packet** (`status: pending_handoff`)
 - `fix-log.md` stating `no product files modified`
@@ -91,11 +92,11 @@ If `--fix` is **absent**, skip Phase N (apply), N+1, N+2, N+3. Still produce:
 
 Phase N-1 baseline is still useful (prove the system was observed). Do not treat a READ-ONLY audit as incomplete for lack of applied fixes.
 
-Hippocratic tests below apply **only** when `--fix` ran.
+Hippocratic tests below are for the **Builder agent**, not AGK Audit. `--fix` is not a first-class path here.
 
 ## THE HIPPOCRATIC RULE
 
-**First, do no harm.** Every `--fix` apply must pass 3 tests:
+**First, do no harm.** Every Builder apply (not AGK Audit) must pass 3 tests:
 
 1. **BEFORE test** — Capture baseline functional state. Does the thing currently work?
 2. **FIX** — Apply the change.

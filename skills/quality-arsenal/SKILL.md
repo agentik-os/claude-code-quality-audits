@@ -24,7 +24,7 @@ Grok Bot hard-caps 50 agents. One face + skills, not 19 auditor bots.
 
 ## Recipe
 1. Lock tenant (`--tenant` or `AGK_TENANT`). CLIENT → no Omega workers.
-2. Default READ-ONLY. `--fix` only if the human spelled it.
+2. READ-ONLY. No `--fix` path. Apply = Builder (different agent).
 3. No args → menu: pilot / orchestrator / tracker init / help.
 4. `pr` / `diff` / `pilot` → Read `audits/audit-pilot.md` (or the `audit-pilot` skill).
 5. Named audit → Read `audits/<id>.md` via that skill wrapper.

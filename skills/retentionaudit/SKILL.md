@@ -1,7 +1,7 @@
 ---
 name: retentionaudit
 description: >
-  Product/CPO frameworks audit. ALWAYS READ-ONLY — ignores --fix. Use when the user wants What to build next, Hooked/JTBD/Moments/Fogg, RICE.
+  Product/CPO frameworks audit. ALWAYS READ-ONLY. Use when the user wants What to build next, Hooked/JTBD/Moments/Fogg, RICE.
   Loads the long protocol from audits/retentionaudit.md. Default READ-ONLY.
   One AGK Audit face — do not spawn a dedicated chat for this audit.
 ---
@@ -20,9 +20,10 @@ Grok Bot hard-caps 50 agents. Stay on the **AGK Audit** face.
 
 ## Default posture
 READ-ONLY findings. Do not edit the product.
-`--fix` is optional, never default, and is a conflict of interest.
-Prefer handing `fix-plan.json` to a Builder (Omega `claude|codex|glm`, or Cursor Cloud on CLIENT).
+There is **no `--fix` path** on AGK Audit. Apply requires a **different agent**
+(Builder: Omega `claude|codex|glm`, or Cursor Cloud on CLIENT).
 Re-audit is a **fresh session**.
+
 
 ## Tenancy
 One tenant per run (`AGK` | `CLIENT` | `LEVERAGE` | `PERSONAL`).
@@ -30,12 +31,13 @@ Never load sibling-client secrets. CLIENT never on Omega.
 Abort if tenant is unset.
 
 ## Recipe
-1. Confirm tenant and READ-ONLY (refuse product edits unless `retentionaudit` allows `--fix` and the user spelled it).
-2. `retentionaudit` special cases: `retentionaudit` never edits; `agentaudit` refuses `--fix`; `secaudit`/`agentaudit` never emit exploit PoCs.
-3. Read and follow the forensic protocol in `audits/retentionaudit.md` (same repo as this skill).
+1. Confirm tenant. Abort if unset. CLIENT never on Omega.
+2. Obey the **AGK-AUDIT-OVERRIDE-V2** block in the first 100 lines of `audits/retentionaudit.md` before the rest of that file.
+3. Tools: Read, Glob, Grep only (plus WebSearch/WebFetch if that body lists them). No Write, Edit, or Bash.
 4. Label each finding `tool-backed` | `llm-judgment` | `inventory-only`.
-5. Emit the 8-file output contract under `audits/.retentionaudit/`.
-6. If findings exist, write a Builder packet. Do not re-audit your own patches in this session.
+5. Emit the 8-file output contract under `audits/.retentionaudit/` with `mode=readonly`.
+6. Write a Builder packet. Do not apply. Do not re-audit your own patches.
+
 
 ## Full protocol
 See [`audits/retentionaudit.md`](../../audits/retentionaudit.md).

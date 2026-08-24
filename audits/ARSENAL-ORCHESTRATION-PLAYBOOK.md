@@ -140,11 +140,9 @@ Per preamble §2 (scoped invocation flags), every audit accepts these flags unif
                      MANDATORY for rule 43 pipeline (Step 8 dynamic chain).
                      Requires --url and --files to be present.
 
---no-fix             Explicit READ-ONLY (DEFAULT even if omitted).
-                     Always preferred. Produces Builder packet only.
+--no-fix             Redundant. AGK Audit is always READ-ONLY.
 
---fix                Opt-in apply in this session. NEVER default.
-                     Conflict of interest. /agentaudit refuses. /retentionaudit ignores.
+--fix / --fix-only   FORBIDDEN on AGK Audit. Do not apply. Dispatch a Builder.
 
 --tenant=            AGK | CLIENT | LEVERAGE | PERSONAL. Abort if unset.
 
@@ -176,7 +174,7 @@ Parallel dispatch (4 work sessions or Agent Teams):
   /debugaudit --files=$FILES --ticket=$T --url=$URL
 
 Wait for all 4 to produce .linear-fix/$T/{audit}.json (READ-ONLY verdicts).
-If any < 100: hand fix-plan to Builder; re-audit in a FRESH session. Same-session auto-fix only if --fix was explicit.
+If any < 100: hand fix-plan to Builder; re-audit in a FRESH session. AGK Audit never applies.
 ```
 
 ### Octad (full audit)

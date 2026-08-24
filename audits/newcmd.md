@@ -39,7 +39,7 @@ Every skill created by /newcmd carries the same DNA. Not because of bureaucracy 
 Examples: /codeaudit, /debugaudit, /perfaudit, /secaudit, /agentaudit
 DNA: Gestalt + Popper
 Structure: 15-25 phases, scoring /300-450, Plan + Builder handoff
---fix is optional and NEVER the default. Re-audit = fresh session.
+AGK Audit has no --fix path. Apply is a different agent (Builder). Re-audit = fresh session.
 Also emit skills/<name>/SKILL.md wrapper (do not duplicate the 500-800 line body).
 ```
 
@@ -187,7 +187,7 @@ Total 300-450 points. Normalized to /100. Letter grade S-F.
 ### AUDIT-DNA-3: PLAN + HANDOFF (not same-session auto-fix)
 ```
 Phase N+1: Generate fix plan (prioritized by severity) — Builder packet
-Phase N+2: Do NOT execute unless user passed --fix (conflict of interest)
+Phase N+2: Do NOT execute. AGK Audit has no apply path. Builder is a different agent.
 Phase N+3: Re-audit in a FRESH session after a Builder lands
 ```
 

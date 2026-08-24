@@ -8,7 +8,7 @@ This directory is the **second surface** of the Quality Arsenal. Claude Code sti
 - Body: short recipe only. **Do not duplicate** the forensic protocols — Read `audits/<id>.md`.
 - One face: **AGK Audit** (`quality-arsenal`). Do not create 18 auditor chats.
 - Grok Bot hard-caps **50 agents**.
-- Default: **READ-ONLY**. `--fix` is never implied.
+- **READ-ONLY.** No `--fix` path on AGK Audit. Apply is a Builder (different agent).
 
 ## Install
 

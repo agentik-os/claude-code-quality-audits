@@ -18,17 +18,20 @@ Every Gestalt-Popper forensic audit in the Quality Arsenal inherits the contract
 
 ---
 
-## 0A. AUDITOR ≠ FIXER (universal, 2026)
+## 0A. AUDITOR ≠ FIXER (universal, 2026) — ADR-001
 
-**Default mode is READ-ONLY findings.** The audit produces `verdict.json` + a Builder packet (`fix-plan.json`). It does **not** edit the product.
+**AGK Audit is READ-ONLY findings.** The audit produces `verdict.json` + a Builder packet (`fix-plan.json`). It does **not** edit product code or schema.
 
 - Auto-fix-in-the-same-session is a **conflict of interest**. The model that missed the bug must not certify the patch.
-- **Fix** is a handoff to a Builder: Omega workers `claude` | `codex` | `glm`, or **Cursor Cloud on CLIENT**.
+- **There is no `--fix` flag on AGK Audit.** A flag or a chat “yes” is not authorization to mutate. Destructive apply needs a **different agent**.
+- **Fix** is a handoff to a **Builder**: Omega workers `claude` | `codex` | `glm`, or **Cursor Cloud on CLIENT**. That agent is not this skill pack.
 - **Re-audit is a FRESH session.** Same chat continuing to score its own diffs is invalid.
-- `--fix` is **optional, documented, never default**. Only when a human types `--fix` and accepts the conflict (solo dogfood). `/retentionaudit` ignores `--fix`. `/agentaudit` **refuses** `--fix`.
-- `--no-fix` is accepted as an explicit confirm of the default.
+- `/retentionaudit` is **always** READ-ONLY (proposals only). Do not attach an apply path to it.
+- `--no-fix` is redundant; the only mode is readonly.
 
-`verdict.json` MUST include `"mode": "readonly"` or `"mode": "fix"` (the latter only if `--fix` was on the invocation).
+`verdict.json.mode` is always `"readonly"`.
+
+Skills that say “Read and follow `audits/<id>.md`” must obey the **AGK-AUDIT-OVERRIDE-V2** block in the first 100 lines of that file. Later FIX EXECUTION text, if any remnant exists, is void.
 
 ---
 
@@ -105,8 +108,8 @@ Every audit parses these flags identically. Rule 43 (Linear pipeline) depends on
 | `--scope={1-line description}` | Free-text scope note in outputs | Multi-audit orchestration |
 | `--ticket={TICKET_ID}` | Link audit to Linear ticket, write results to `.linear-fix/{TICKET}/{audit}.json` | Rule 43 pipeline |
 | `--tenant={AGK\|CLIENT\|LEVERAGE\|PERSONAL}` | Tenant lock | Always, unless `AGK_TENANT` is already set |
-| `--no-fix` | Explicit READ-ONLY (this is the **default** even if omitted) | Optional confirm |
-| `--fix` | Opt-in same-session apply (conflict of interest). **Never default.** Refused by `/agentaudit`. Ignored by `/retentionaudit`. | Human-accepted solo dogfood only |
+| `--no-fix` | Redundant confirm of READ-ONLY (the only AGK Audit mode) | Optional |
+| `--fix` / `--fix-only` | **Forbidden on AGK Audit.** Do not parse as apply. Tell the user to dispatch a Builder. | Never |
 | `--focus={area}` | Per-audit narrower scope with FULL phase depth | Targeted concerns |
 
 **FORBIDDEN (rule 46):** `--quick`, `--streamlined`, `--lightweight`, `--light`, `--fast`, `--custom`. If present in user prompt → REFUSE with reference to rule 46. Narrower scope uses `--focus` with full depth per phase.
@@ -143,24 +146,11 @@ Rule 43's parallel DYNAMIC audit chain (`/codeaudit` + `/uiuxaudit` + `/flowaudi
 
 ## 4. PHASE RE-AUDIT CAP (MANDATORY)
 
-**Default (READ-ONLY):** no apply loop. Emit the plan and stop. `iterations.md` records `cycles=0 mode=readonly`.
+**READ-ONLY only:** no apply loop. Emit the Builder packet and stop. `iterations.md` records `cycles=0 mode=readonly`.
 
-**Only if `--fix` was explicit:** same-session apply is capped at **3 cycles**, then stop. Preferred path remains: hand off to Builder → **fresh session** re-audit (also capped at 3 fresh sessions).
+Re-audit after a Builder lands is a **fresh session** (cap 3 fresh sessions). AGK Audit never applies patches between those sessions.
 
-```
-# --fix only (discouraged)
-iteration = 0
-while score < target_threshold (80 solo) AND user passed --fix:
-    iteration += 1
-    apply fixes from fix-plan.json
-    re-run failing phases
-    record score trajectory in .{audit}/iterations.md
-    if iteration >= 3:
-        mark remaining findings as NEEDS_REVIEW
-        exit loop
-```
-
-Zero tolerance for silent infinite loops. Same-session auto-fix is never the default.
+Zero tolerance for silent infinite loops. Same-session auto-fix is **forbidden**, not merely discouraged.
 
 ---
 
@@ -209,7 +199,7 @@ Every audit declares outputs. Before reporting success, verify they exist with v
   "version": "<audit-version>",         // e.g. "v2.1"
   "preamble_version": "2.0",            // MUST match this file's version
   "skill_used": "<audit-name>",         // for rule 43 gate compliance
-  "mode": "readonly",                   // "readonly" default; "fix" only if --fix
+  "mode": "readonly",                   // AGK Audit is always readonly
   "tenant": "CLIENT",                   // AGK | CLIENT | LEVERAGE | PERSONAL
   "runtime": "agk-audit",               // claude-code | cursor | grok-bot | agk-audit
   "score": 95,                          // /100 normalized
@@ -451,25 +441,25 @@ Narrower scope is achieved via `--focus` flag with FULL phase depth, never degra
 
 | Audit | Max | Phases | Non-UI ABORT | Code-touching | External-fetch | Specialty |
 |-------|-----|--------|-------------|---------------|----------------|-----------|
-| /codeaudit | 420 | 24 | No | Default no | No | SOLID, phantoms, deps |
-| /debugaudit | 360 | 23 | Partial | Default no | No | Runtime bugs, console |
-| /uiuxaudit | 420 | 25 | Yes | Default no | No | Visual coherence |
-| /flowaudit | 400 | 25 | Yes | Default no | No | User journeys |
-| /featureaudit | 320 | 19 | No | Default no | Yes (WebSearch) | PRD completeness |
-| /perfaudit | 360 | 23 | No | Default no | No | Core Web Vitals |
-| /secaudit | 400+ | 25+ | No | **Default no; `--fix` only** | Yes (inventory; **no PoCs**) | OWASP 2021 + LLM 2025 surfaces |
-| /agentaudit | 360 | 16 | No | **Never** (refuses `--fix`) | No | Harness / MCP / tenancy / gates |
-| /a11yaudit | 320 | 21 | Partial | **Default no; `--fix` only** | No | WCAG 2.2 AA |
-| /seoaudit | 400 | 25 | Partial | Default no | Yes (crawl) | Crawlability, GEO/AEO |
-| /copyaudit | 280 | 19 | No | Default no | No | Claims vs reality |
-| /dxaudit | 320 | 21 | No | Default no | No | Developer onboarding |
-| /motionaudit | 360 | 23 | Yes | Default no | No | Motion purpose |
-| /dataaudit | 320 | 21 | No | **Destructive only with `--fix` + backup** | No | Schema + integrity |
-| /apiaudit | 360 | 23 | No | Default no | Yes (inventory) | REST/GraphQL contracts |
+| /codeaudit | 420 | 24 | No | Never (AGK Audit) | No | SOLID, phantoms, deps |
+| /debugaudit | 360 | 23 | Partial | Never (AGK Audit) | No | Runtime bugs, console |
+| /uiuxaudit | 420 | 25 | Yes | Never (AGK Audit) | No | Visual coherence |
+| /flowaudit | 400 | 25 | Yes | Never (AGK Audit) | No | User journeys |
+| /featureaudit | 320 | 19 | No | Never (AGK Audit) | Yes (WebSearch) | PRD completeness |
+| /perfaudit | 360 | 23 | No | Never (AGK Audit) | No | Core Web Vitals |
+| /secaudit | 400+ | 25+ | No | **Never (AGK Audit)** | Inventory; **no PoCs** | OWASP 2021 + LLM 2025 surfaces |
+| /agentaudit | 360 | 16 | No | **Never** | No | Harness / MCP / tenancy / gates |
+| /a11yaudit | 320 | 21 | Partial | **Never (AGK Audit)** | No | WCAG 2.2 AA |
+| /seoaudit | 400 | 25 | Partial | Never (AGK Audit) | Yes (crawl) | Crawlability, GEO/AEO |
+| /copyaudit | 280 | 19 | No | Never (AGK Audit) | No | Claims vs reality |
+| /dxaudit | 320 | 21 | No | Never (AGK Audit) | No | Developer onboarding |
+| /motionaudit | 360 | 23 | Yes | Never (AGK Audit) | No | Motion purpose |
+| /dataaudit | 320 | 21 | No | **Never (AGK Audit). Builder may write only with backup + separate dispatch** | No | Schema + integrity |
+| /apiaudit | 360 | 23 | No | Never (AGK Audit) | Yes (inventory) | REST/GraphQL contracts |
 | /retentionaudit | 400 | — | No | **Never** | No | Product/CPO (proposal only) |
-| /automationaudit | 330 | 22 | No | Default no | No | Cron / daemons |
-| /logicaudit | 360 | 20 | No | Default no | No | Architecture |
-| /refontaudit | 540 | 25 | Yes | Default no | No | Dashboard redesign |
+| /automationaudit | 330 | 22 | No | Never (AGK Audit) | No | Cron / daemons |
+| /logicaudit | 360 | 20 | No | Never (AGK Audit) | No | Architecture |
+| /refontaudit | 540 | 25 | Yes | Never (AGK Audit) | No | Dashboard redesign |
 
 ---
 
@@ -524,6 +514,6 @@ This catches drift at the moment it matters — when an audit is about to execut
 ---
 
 *Preamble v1.1 — 2026-04-14. Added §16 (project signal detection) + §17 (preamble self-check).*
-*Preamble v2.0 — 2026-08-24. READ-ONLY default, `--fix` opt-in, dual runtime, tenancy, AGK Audit face, /agentaudit, RED rule. Unverified catch-rate/trust-curve numbers are not doctrine.*
+*Preamble v2.1 — 2026-08-24. ADR-001: AGK Audit has no `--fix` path. Auditor ≠ fixer in the bodies skills follow. Dual runtime, tenancy, AGK Audit face, /agentaudit, RED (catalogs removed). Unverified catch-rate/trust-curve numbers are not doctrine.*
 *Referenced by all 19 audits + /metaudit compliance scanner.*
 *One doctrine, nineteen implementations, one face.*

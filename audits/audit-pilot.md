@@ -442,7 +442,7 @@ Specific patterns the pilot uses (NOT "look for issues"):
 
 - ❌ Recommend ALL 19 audits "just in case" (that's `/quality-arsenal full`, different intent)
 - ❌ Spawn one chat agent per selected audit (one face; Grok Bot cap 50)
-- ❌ Apply fixes (pilot chooses; auditors stay READ-ONLY unless `--fix`)
+- ❌ Apply fixes (pilot chooses; AGK Audit never applies — Builder is a different agent)
 - ❌ Re-run audits that are fresh AND unrelated to current change
 - ❌ Skip critical audits because user said "be quick" (security on payment = non-negotiable)
 - ❌ Run audits sequentially when DAG allows parallel
