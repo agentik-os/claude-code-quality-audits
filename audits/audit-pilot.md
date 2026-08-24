@@ -7,8 +7,9 @@ description: >
   "/audit-pilot", "/pilot", "smart audit", "audit my PR", "audit my feature",
   "what should I audit before merging", "audit the changes", "dynamic audit",
   "audit my commit", "audit before push". Auto-detects scope via git diff,
-  maps file changes to relevant audits, debounces re-runs, tracks freshness
-  vs file mtime. The "AI co-pilot" for the Quality Arsenal.
+  maps file changes to relevant audits (including /agentaudit for harness/MCP),
+  debounces re-runs, tracks freshness vs file mtime. Chooser in the AGK loop
+  (Review → Audit → Afterwork). Default READ-ONLY. One face, not 18 chats.
 disable-model-invocation: false
 ---
 
@@ -80,20 +81,21 @@ change_profile:
 
 ### Layer 2 — Audit Relevance Scoring
 
-For each of the 18 audits, score relevance 0-100 based on the change profile:
+For each of the 19 audits, score relevance 0-100 based on the change profile:
 
 ```python
 # Pseudo-scoring logic
 def score_audit(audit_name, change_profile):
     scores = {
         "secaudit":   100 if "auth_logic" or "public_endpoint" in risk_indicators else 30,
+        "agentaudit": 100 if any(mcp/skills/providers/session_id/yolo/oracle) else 20,
         "apiaudit":   100 if any("api/" in f for f in files) else 20,
         "dataaudit":  100 if "schema_migration" or "*.prisma" in files else 10,
         "perfaudit":   80 if size.lines_added > 200 else 40,
         "a11yaudit":   90 if any("*.tsx" or "*.jsx" in f for f in files) and not pure_logic else 20,
         "codeaudit":   60 always (background quality check),
         "uiuxaudit":   90 if visual files changed and not pure_logic else 0,
-        # ... etc for all 18
+        # ... etc for all 19
     }
     return scores[audit_name]
 ```
@@ -361,19 +363,21 @@ Pilot picks ONLY the audits whose combined time fits in 30 min. Greedy by releva
 
 ---
 
-## INTEGRATION WITH EXISTING SKILLS
+## AGK LOOP POSITION
+
+`/audit-pilot` is the **chooser**, not the Reviewer and not the Builder.
 
 ```
-/audit-pilot        →  decides WHICH audits to run
-       ↓
-/audit-orchestrator →  decides WHICH POWER LEVEL (quick/standard/forensic)
-       ↓
-/codeaudit, /secaudit, etc.  →  actually run the audits
-       ↓
-/audit-tracker      →  dashboard + freshness tracking
-       ↓
-/quality-arsenal    →  master entry that ties it all together
+Review (fresh; reasons not to merge)
+    →  /audit-pilot     decides WHICH audits + scopes them
+    →  /audit-orchestrator  power level (depth only — still READ-ONLY)
+    →  audits run as skills on ONE face (AGK Audit)
+    →  Builder handoff (Omega claude|codex|glm, or Cursor Cloud on CLIENT)
+    →  fresh-session re-audit
+    →  Afterwork packet
 ```
+
+Writer-done is not done. Do not skip Review because the writer asked for `/audit-pilot`.
 
 In practice users just type one of:
 - `/audit-pilot pr` → pilot picks + dispatches automatically
@@ -421,6 +425,12 @@ Specific patterns the pilot uses (NOT "look for issues"):
 - Mandatory: /automationaudit
 - Recommended: /secaudit (secret exposure in scripts)
 
+### Agentic harness / MCP / skills
+- File patterns: `**/mcp.json`, `**/.mcp.json`, `**/providers.toml`, `**/skills/**`, `**/.cursor/**`, `**/CLAUDE.md`, `**/*oracle*`, `**/*worker*`, `**/.aisb/**`, `**/session_id*`
+- Mandatory: /agentaudit
+- Recommended: /secaudit `--focus=mcp` if the **product** embeds MCP/LLM tools
+- Tenant: one tenant per run; CLIENT never on Omega
+
 ### Documentation
 - File patterns: `README.md`, `CONTRIBUTING.md`, `docs/**`
 - Mandatory: /dxaudit + /copyaudit
@@ -430,7 +440,9 @@ Specific patterns the pilot uses (NOT "look for issues"):
 
 ## ANTI-PATTERNS (what the pilot WON'T do)
 
-- ❌ Recommend ALL 18 audits "just in case" (that's `/quality-arsenal full`, different intent)
+- ❌ Recommend ALL 19 audits "just in case" (that's `/quality-arsenal full`, different intent)
+- ❌ Spawn one chat agent per selected audit (one face; Grok Bot cap 50)
+- ❌ Apply fixes (pilot chooses; auditors stay READ-ONLY unless `--fix`)
 - ❌ Re-run audits that are fresh AND unrelated to current change
 - ❌ Skip critical audits because user said "be quick" (security on payment = non-negotiable)
 - ❌ Run audits sequentially when DAG allows parallel
@@ -462,5 +474,5 @@ Specific patterns the pilot uses (NOT "look for issues"):
 
 - Internal: Agentik OS `audit-selector.py` (Linear-ticket-driven dispatcher), generalized here
 - Public: https://github.com/agentik-os/claude-code-quality-audits
-- File-to-audit mappings: derived from 18-audit cross-validation matrix
-- Confidence calibration model: empirical from 6 months / 3 codebases dogfooding
+- File-to-audit mappings: derived from the 19-audit ownership table
+- Confidence calibration: **unverified** if cited as a published model — treat `log.jsonl` as a local hint only

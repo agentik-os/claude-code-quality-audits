@@ -2,12 +2,12 @@
 name: a11yaudit
 description: >
   Forensic accessibility audit v1 (Gestalt-Popper). 21-phase deep analysis of every
-  accessibility surface: WCAG 2.1 AA compliance, keyboard navigation (every interactive element),
+  accessibility surface: WCAG 2.2 AA compliance, keyboard navigation (every interactive element),
   screen reader testing, ARIA labels/roles/states, color contrast (4.5:1 AA, 3:1 large text),
   focus management, skip navigation, form labels, error announcements, alt text, heading hierarchy,
   landmark regions, touch targets (44px), motion/animation preferences, cognitive load, reading level,
   plus verdict, fix plan, fix execution, re-audit, and integration smoke gate.
-  Score /320. Preamble v1.0 compliant. Audit -> Plan -> Fix -> Re-audit.
+  Score /320. Preamble v2.0. Default READ-ONLY (Audit → Plan/handoff). `--fix` optional.
   Use when user says "/a11yaudit", "accessibility audit", "wcag audit", "a11y check",
   "keyboard navigation test", "screen reader test", "color contrast check".
 allowed-tools: ["Read", "Write", "Edit", "Bash", "Glob", "Grep", "Agent", "TaskCreate", "TaskUpdate", "TaskList", "TaskGet"]
@@ -265,9 +265,11 @@ in your `verdict.json` and bump severity by one level.
 
 ---
 
-## PHASE 1: WCAG 2.1 AA COMPLIANCE AUDIT
+## PHASE 1: WCAG 2.2 AA COMPLIANCE AUDIT
 
-> *"The law says AA. Most sites fail Level A. That's not a gap — it's a chasm."*
+> *"The law says AA. WCAG 2.2 is the current W3C Recommendation this protocol claims. Most sites fail Level A. That's not a gap — it's a chasm."*
+
+**Tool-backed vs LLM-judgment:** axe-core / Playwright = tool-backed. Manual keyboard, SR flow, and 2.2-only criteria that your axe version does not cover = LLM-judgment (or manual) — label them.
 
 ```
 FOR EVERY discoverable page:
@@ -290,12 +292,18 @@ FOR EVERY discoverable page:
    -> 2.3.1 Three flashes: no content flashes > 3 times/second
    -> 2.4.x Navigation: skip links, page titles, focus order, link purpose
    -> 2.5.x Input modalities: pointer gestures, pointer cancellation, label in name, motion actuation
+   -> **2.4.11 Focus Not Obscured (Minimum) — 2.2 AA:** focused item not entirely hidden by sticky headers/cookie banners
+   -> **2.5.7 Dragging Movements — 2.2 AA:** drag-only UI has a single-pointer alternative
+   -> **2.5.8 Target Size (Minimum) — 2.2 AA:** 24×24 CSS px (distinct from 2.5.5 44×44 AAA / older 44px notes)
 
 3. UNDERSTANDABLE (WCAG 3.x)
    -> 3.1.1 Language of page: lang attribute present
    -> 3.1.2 Language of parts: foreign phrases marked
    -> 3.2.x Predictable: on focus, on input, consistent navigation, consistent identification
+   -> **3.2.6 Consistent Help — 2.2 A:** help mechanism in the same relative order when repeated
    -> 3.3.x Input assistance: error identification, labels, error suggestion, error prevention
+   -> **3.3.7 Redundant Entry — 2.2 A:** do not re-ask information the user already gave in the same process
+   -> **3.3.8 Accessible Authentication (Minimum) — 2.2 AA:** no cognitive test that requires recalling a password *from memory* to paste (allow password managers / copy-paste)
 
 4. ROBUST (WCAG 4.x)
    -> 4.1.1 Parsing: valid HTML (no duplicate IDs)
@@ -1126,7 +1134,7 @@ Score each phase 0-10, weight by severity:
 
 ```
 SCORING MATRIX (320 max):
-  Phase  1  (WCAG 2.1 AA Compliance)    x 3.0  = max 30
+  Phase  1  (WCAG 2.2 AA Compliance)    x 3.0  = max 30
   Phase  2  (Keyboard Navigation)       x 4.0  = max 40  ** HINGE **
   Phase  3  (Screen Reader)             x 3.0  = max 30
   Phase  4  (ARIA Labels/Roles/States)  x 2.5  = max 25
@@ -1147,7 +1155,7 @@ SCORING MATRIX (320 max):
 NORMALIZE: score = (raw / 320) x 100
 
 GRADE:
-  90-100: S — Exemplary. Meets WCAG 2.1 AA, keyboard perfect, screen reader excellent.
+  90-100: S — Exemplary. Meets WCAG 2.2 AA, keyboard perfect, screen reader excellent.
   80-89:  A — Strong. Minor gaps, all primary flows accessible.
   70-79:  B — Adequate. Some barriers, most flows accessible with workarounds.
   60-69:  C — Deficient. Significant barriers, some flows blocked.

@@ -21,27 +21,30 @@ RIGHT audits at the RIGHT power level, dispatch them, and synthesize results.
 
 ```bash
 /audit-orchestrator               # interactive: ask user what to audit
-/audit-orchestrator full          # run all 17 audits in parallel
+/audit-orchestrator full          # run all 19 audits in waves (READ-ONLY)
 /audit-orchestrator quick         # top 5 most-impactful audits at Quick level
 /audit-orchestrator standard      # smart selection at Standard level (default)
 /audit-orchestrator forensic      # deep Gestalt-Popper on selected audits
-/audit-orchestrator security      # secaudit + apiaudit + dataaudit
+/audit-orchestrator security      # secaudit + agentaudit + apiaudit + dataaudit
 /audit-orchestrator performance   # perfaudit + seoaudit
 /audit-orchestrator design        # uiuxaudit + motionaudit + a11yaudit + copyaudit
 ```
 
-## The 17 audits in the Quality Arsenal
+## The 19 audits in the Quality Arsenal
+
+Default: READ-ONLY. `--fix` never implied by power level.
 
 | Audit | Domain | When to pick |
 |---|---|---|
 | `/codeaudit` | Code architecture | New codebase, refactor, technical debt |
-| `/secaudit` | Security (OWASP) | Pre-prod, payment handling, auth surfaces |
+| `/secaudit` | Security (OWASP web + LLM 2025 app surfaces) | Pre-prod, payment, auth, in-app MCP |
+| `/agentaudit` | Harness / MCP / injection / tenancy | Agent runtimes, YOLO, session_id, memory |
 | `/uiuxaudit` | Design quality | Visual consistency, design system audit |
 | `/flowaudit` | User journeys | Onboarding, conversion drops, dead-ends |
 | `/debugaudit` | Runtime bugs | Console errors, broken features, smoke test |
 | `/featureaudit` | Completeness | PRD validation, ship-readiness, "what's missing" |
 | `/perfaudit` | Core Web Vitals | Slow site, lighthouse improvement |
-| `/a11yaudit` | WCAG 2.1 AA | Accessibility, screen readers, contrast |
+| `/a11yaudit` | WCAG 2.2 AA | Accessibility, screen readers, contrast |
 | `/seoaudit` | Discoverability | Search ranking, GEO/AEO, schema markup |
 | `/dataaudit` | Schema integrity | Orphaned records, migrations, RGPD |
 | `/apiaudit` | API contracts | Endpoint quality, auth matrix, rate limits |
@@ -61,15 +64,15 @@ RIGHT audits at the RIGHT power level, dispatch them, and synthesize results.
 - Use case: gut-check before a meeting, fast triage
 
 ### 🎯 Level 2 — Standard (30-60 min, DEFAULT)
-- Full phases: Audit → Plan → Fix → Re-audit
+- Full phases: Audit → Plan (**Builder handoff**). Apply only if `--fix`.
 - Score normalized /100
 - Output: complete `audits/.{name}audit/verdict.json` + reports
 - Use case: regular quality cycle, pre-PR validation
 
 ### 🔬 Level 3 — Forensic (1-4h per audit)
 - Full Gestalt-Popper protocol, all phases extended
-- Auto-fix every finding P0/P1/P2
-- Re-audit cycles until 100/100 (or 3 cycle cap)
+- Plan every finding P0/P1/P2 for a Builder
+- Re-audit in a **fresh session** (or 3-cycle cap if `--fix` was explicit)
 - Output: forensic-grade with falsification proofs + telemetry
 - Use case: pre-launch, security/compliance gate, "make it bulletproof"
 
@@ -88,7 +91,8 @@ When user says ambiguous request like "audit my project":
 
 2. PARSE INTENT KEYWORDS (English + French)
    - "speed/fast/lent/lenteur" → perfaudit (+ seoaudit if web)
-   - "security/sec/vuln/secure/sécurité" → secaudit + apiaudit
+   - "security/sec/vuln/secure/sécurité" → secaudit + apiaudit + agentaudit (if harness/MCP present)
+   - "harness/mcp/agentic/yolo/injection/tenant" → agentaudit
    - "design/visual/UI/UX/style" → uiuxaudit + motionaudit
    - "content/copy/messaging/text" → copyaudit
    - "accessibility/a11y/WCAG/handicap" → a11yaudit
@@ -100,7 +104,7 @@ When user says ambiguous request like "audit my project":
    - "automation/cron/scripts" → automationaudit
    - "bug/error/broken/runtime" → debugaudit
    - "redesign/refonte/dashboard" → refontaudit
-   - "full/all/everything/complet" → ALL 17 audits
+   - "full/all/everything/complet" → ALL 19 audits
 
 3. PICK POWER LEVEL
    - Default: Standard (Level 2)
@@ -142,9 +146,9 @@ Approve? [y/n/customize]
 
 When user says "full audit" / "audit complet" / "tous les audits":
 
-1. Dispatch ALL 17 audits in 3 parallel waves (file-safety partitioned):
+1. Dispatch ALL 19 audits in 3 parallel waves (one face — do not spawn 19 chats):
    - **Wave 1** (read-only, can parallel): codeaudit, logicaudit, dataaudit, apiaudit, seoaudit, featureaudit, retentionaudit, copyaudit, dxaudit
-   - **Wave 2** (after Wave 1 verdicts exist): secaudit (reads apiaudit), perfaudit, debugaudit, automationaudit
+   - **Wave 2** (after Wave 1 verdicts exist): secaudit (reads apiaudit), agentaudit, perfaudit, debugaudit, automationaudit
    - **Wave 3** (UI bundle, after Wave 1): uiuxaudit, motionaudit, a11yaudit, flowaudit
 2. After all done, generate `audits/SYNTHESIS.md` aggregating scores
 3. Score the project: average /100 across all audits + flag any < 80
@@ -207,6 +211,8 @@ You: send Telegram report with aggregate score + per-audit links
 
 ## Sources
 
-- 17 Quality Arsenal audits in `~/.claude/commands/`
+- 19 Quality Arsenal audits in `audits/` + `skills/` wrappers
+- Dual runtime: Claude Code commands + Cursor/Grok SKILL.md
+- Public mirror: https://github.com/agentik-os/claude-code-quality-audits
 - Helper docs: `ARSENAL-ORCHESTRATION-PLAYBOOK.md`, `ARSENAL-INTERCONNECTIONS.md`
 - Public mirror: https://github.com/agentik-os/quality-arsenal

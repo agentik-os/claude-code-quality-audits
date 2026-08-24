@@ -1,18 +1,13 @@
 ---
 name: secaudit
 description: >
-  Forensic security audit v1 (Gestalt-Popper). 25-phase deep analysis of everything that is
-  VULNERABLE RIGHT NOW: OWASP Top 10 verification, XSS testing (25+ payload patterns),
-  SQL/NoSQL injection, CORS misconfiguration, CSP headers audit, authentication bypass,
-  session management, JWT security, IDOR detection, SSRF probing, open redirect testing,
-  file upload vulnerabilities, rate limiting verification, brute force protection,
-  secrets scanning (env vars, git history, JS bundles), dependency CVE audit,
-  SSL/TLS configuration, security headers audit, API authentication verification,
-  input validation completeness, plus verdict, fix plan, fix execution, re-audit,
-  and rate-limit safety gate. Score /400. Preamble v1.0 compliant. Audit -> Plan -> Fix -> Re-audit.
+  Forensic security audit (Gestalt-Popper). Product-surface security: OWASP Top 10 2021
+  (web), OWASP LLM Top 10 2025 (in-app LLM/MCP), secrets (gitleaks/trufflehog when
+  present). Default READ-ONLY. RED: findings + evidence + impact + rec — NEVER emit
+  exploit PoCs or working payloads. Harness/tenancy/YOLO/session_id → /agentaudit.
   Use when user says "/secaudit", "security audit", "is it secure", "vulnerability scan",
-  "pentest the code", "find vulnerabilities", "security review", "owasp audit".
-allowed-tools: ["Read", "Write", "Edit", "Bash", "Glob", "Grep", "Agent", "TaskCreate", "TaskUpdate", "TaskList", "TaskGet"]
+  "find vulnerabilities", "security review", "owasp audit".
+allowed-tools: ["Read", "Glob", "Grep", "Bash"]
 ---
 
 <!-- AUDIT-META-V2-INJECTED -->
@@ -39,9 +34,15 @@ allowed-tools: ["Read", "Write", "Edit", "Bash", "Glob", "Grep", "Agent", "TaskC
 
 ---
 
-# /secaudit v1 — Forensic Security Audit (Gestalt-Popper)
+# /secaudit v1.3 — Forensic Security Audit (Gestalt-Popper)
 
 > *"The other audits ask 'does it work?' I ask 'can someone make it work AGAINST you?'"*
+
+**Default: READ-ONLY.** `--fix` is opt-in and never implied. Harness threats live in `/agentaudit`.
+
+### RED RULE (2026-08-24 — overrides payload catalogs below)
+
+Do **not** emit exploit PoCs, XSS/SQLi/SSRF payload strings, or reproduction scripts in any artifact. Legacy phase text that lists "25+ payload patterns" means **check classes** (reflected, stored, DOM) — write findings as evidence + impact + control recommendation. If proving exploitability would require firing a payload: stop, mark `inventory-only` or `llm-judgment`, recommend an authorized human red-team.
 
 ---
 
@@ -1796,3 +1797,77 @@ Every fix MUST follow the "Do No Harm" protocol:
 5. **BEFORE/AFTER MATRIX** — produce `.{audit}/before-after.md` with functional status table per affected item.
 
 **An audit that breaks 1 working thing is WORSE than no audit.** Do NOT claim "done" without `before-after.md` showing zero regressions.
+
+---
+
+## v1.3 ADDENDA — 2026 AGENTIC / LLM APP SURFACES (2026-08-24)
+
+Preamble v2. These phases extend the 20 scored product phases. They do **not** replace `/agentaudit`.
+
+**Standards (cite, do not invent):**
+- OWASP Top 10 **2021** — still the latest completed *web* Top 10 as of this edit. Phases 1–20 stay mapped to A01–A10:2021.
+- OWASP Top 10 for LLM Applications **2025** (LLM01–LLM10) — in-product LLM/RAG/tool features.
+- OWASP Top 10 for Agentic Applications **2026** (ASI01–ASI10) — **owned by `/agentaudit`**. If you see harness-only risk, cross-forward; do not double-score.
+
+**Secret scanners (tool-backed when installed, 2026):** `gitleaks`, `trufflehog`, GitHub secret scanning / `osv-scanner`. If the binary is missing, say `check_kind: llm-judgment` and do not invent a scanner report.
+
+### PHASE 25 — LLM APPLICATION SURFACES (LLM01–LLM10)
+
+Inventory product features that call a model or ingest untrusted text into a prompt (chat, RAG, support bot, "ask the docs"). For each:
+
+| ID | Look for (evidence, not a PoC) |
+|---|---|
+| LLM01 Prompt Injection | User/web/doc content concatenated into system/developer prompts without a trust boundary |
+| LLM02 Sensitive Disclosure | Prompts or logs that can echo secrets, other tenants' data |
+| LLM03 Supply Chain | Unpinned model packages, plugin stores, prompt packs |
+| LLM04 Data/Model Poisoning | Fine-tune / few-shot / RAG corpora writable by users |
+| LLM05 Improper Output Handling | Model output executed as code, HTML, or SQL without encoding |
+| LLM06 Excessive Agency | Model can call write/network/payment tools with no HITL |
+| LLM07 System Prompt Leakage | Prompt files served, logged, or returned in errors |
+| LLM08 Vector/Embedding | Shared indexes, missing tenant key, poisoned chunks |
+| LLM09 Misinformation | Ungrounded answers presented as product truth (copyaudit may share) |
+| LLM10 Unbounded Consumption | Missing token/cost/rate caps on model calls |
+
+`check_kind` required. Score this phase 0–20 and add to applicable max (new raw max **420** when Phase 25–27 apply; if no LLM surface, mark N/A and keep /400).
+
+### PHASE 26 — IN-APP MCP / TOOL CONNECTORS
+
+If the **product** embeds MCP or equivalent tool servers (not the operator's Cursor harness — that is `/agentaudit`):
+
+1. Connector list, pin vs latest, filesystem/network/credential scopes
+2. Secrets in MCP JSON vs a secret manager
+3. Confused-deputy: end-user prompt → privileged connector
+
+Cross-forward harness MCP (`.cursor`, `~/.claude`, Omega) to `/agentaudit`.
+
+### PHASE 27 — SECRETS IN ENV / `providers.toml` / CHAT
+
+```
+# Run only if present; redact all values
+gitleaks detect --no-banner --redact
+# or
+trufflehog filesystem . --results=verified,unknown
+```
+
+Also inventory (paths only): `.env*`, `providers.toml`, chat exports, `*.jsonl` sessions, JS bundles. Never write raw secrets into `verdict.json`.
+
+### Default flags and handoff
+
+- `--no-fix` is the default. Phase 23 FIX EXECUTION runs **only** if `--fix` is on the invocation.
+- Without `--fix`, Phase 22 writes a Builder packet; `fix-log.md` = no product files modified.
+- Re-audit after Builder = **fresh session**.
+- `--tenant=` required if `AGK_TENANT` unset. CLIENT never on Omega.
+
+### Scoring addendum (v1.3)
+
+```
+Phases 25–27 max 20 each when applicable → raw max 400 + 60 = 460
+NORMALIZE against applicable_raw_max (exclude N/A)
+verdict.json.preamble_version = "2.0"
+verdict.json.mode = "readonly" | "fix"
+verdict.json.red_rule = "no_exploit_poc"
+```
+
+---
+
+*secaudit v1.3 — 2026-08-24. READ-ONLY default. RED no-PoC. LLM 2025 + in-app MCP + current secret scanners. Harness remains /agentaudit.*

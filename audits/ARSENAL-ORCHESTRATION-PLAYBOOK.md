@@ -8,9 +8,27 @@ description: >
   NOT a user-invokable skill — AISB/Oracle reference doc.
 ---
 
-# Quality Arsenal — Orchestration Playbook v1.0
+# Quality Arsenal — Orchestration Playbook v2.0
 
-> *"Given a mission, which audits fire, in what order, with what scope?"*
+> *"Given a mission, which audits fire, in what order, with what scope — and who is not allowed to apply the fix?"*
+
+**v2.0 (2026-08-24):** `/audit-pilot` is the chooser. AGK loop is Review → Audit → Afterwork. Default READ-ONLY. One face (`AGK Audit`). One tenant. Grok Bot ≤ 50 agents. `/agentaudit` is in the registry.
+
+---
+
+## 0. AGK LOOP (MANDATORY ORDER)
+
+```
+1. Review     — FRESH session. Reasons NOT to merge. Writer cannot Review their own work.
+2. Audit      — this arsenal, scoped by /audit-pilot from the diff/PR. READ-ONLY.
+3. Builder    — Omega workers claude|codex|glm, or Cursor Cloud if tenant=CLIENT.
+4. Re-audit   — FRESH session (not the auditor who wrote the plan applying it).
+5. Afterwork  — SYNTHESIS.md + human packet (PDF or equivalent). Writer-done ≠ done.
+```
+
+Do not start Audit until Review has named merge-blockers or explicitly said "no review blockers, proceed to scoped audit."
+
+CLIENT workloads never dispatch onto Omega.
 
 ---
 
@@ -73,12 +91,13 @@ Machine-usable routing from natural language to dispatch:
 
 | User input (en/fr, case-insensitive substring match) | Dispatch plan |
 |------|---------------|
-| `audit complet`, `full audit`, `toutes les audits`, `all audits`, `tout auditer` | All 14 via the octad pattern (INTERCONNECTIONS §3). `/metaudit` as final step. |
+| `audit complet`, `full audit`, `toutes les audits`, `all audits`, `tout auditer` | All 19 via waves (INTERCONNECTIONS). `/agentaudit` in Wave 2 with `/secaudit`. `/metaudit` as final step if command/skill files changed. |
 | `audit code`, `code audit`, `audit this code` | `/codeaudit --files=<detected>` solo |
 | `audit ui`, `audit ux`, `design audit`, `audit design`, `audit visuel` | `/uiuxaudit --url=<detected>` solo (add `/a11yaudit` if user says "accessible" too) |
 | `audit flow`, `user flow`, `audit parcours`, `workflow audit` | `/flowaudit --url=<detected>` solo |
 | `audit perf`, `performance audit`, `core web vitals`, `audit rapidité` | `/perfaudit --url=<detected>` solo |
-| `audit sec`, `security audit`, `owasp`, `audit sécurité` | `/apiaudit` (static auth) → `/secaudit` (exploit) — STRICT order |
+| `audit sec`, `security audit`, `owasp`, `audit sécurité` | `/apiaudit` (static auth) → `/secaudit` (app) — STRICT order. Add `/agentaudit` if MCP/skills/harness files exist. |
+| `harness`, `mcp`, `agentic`, `prompt injection`, `yolo`, `tenant isolation` | `/agentaudit` (primary) + `/secaudit --focus=mcp` if the product embeds MCP |
 | `audit a11y`, `accessibility audit`, `wcag`, `audit accessibilité` | `/a11yaudit --url=<detected>` solo |
 | `audit seo`, `seo audit`, `audit référencement`, `crawlability` | `/perfaudit --url=<detected>` → `/seoaudit --url=<detected>` — STRICT order (CWV handoff) |
 | `audit api`, `api audit`, `audit contrats api` | `/dataaudit` → `/apiaudit` — STRICT order (schema → contract) |
@@ -91,7 +110,7 @@ Machine-usable routing from natural language to dispatch:
 | `meta audit`, `audit the audits`, `audit commands`, `quality arsenal compliance` | `/metaudit` solo |
 | `redesign dashboard`, `refonte dashboard`, `comme linear`, `comme vercel`, `dashboard senior` | `/refontaudit` (not Quality Arsenal, separate dashboard skill) |
 | Linear ticket phrase per rule 43 | QUADRUPLE: `/codeaudit` + `/uiuxaudit` + `/flowaudit` + `/debugaudit` all --ticket-scoped in parallel |
-| Vague (`review`, `check it out`) | ASK user which domain — do NOT pick arbitrarily |
+| Vague (`review`, `check it out`) | ASK user which domain — do NOT pick arbitrarily. If they meant AGK Review (merge blockers), that is **not** this arsenal — run Review first, then `/audit-pilot`. |
 
 **Multiple keywords in one prompt** (e.g., "audit UX et code on /cases"):
 - Launch each matching audit in PARALLEL with the scope derived from the URL
@@ -121,8 +140,13 @@ Per preamble §2 (scoped invocation flags), every audit accepts these flags unif
                      MANDATORY for rule 43 pipeline (Step 8 dynamic chain).
                      Requires --url and --files to be present.
 
---no-fix             Dry-run scoring only; skip fix execution.
-                     Use when user wants to review the fix plan before authorize.
+--no-fix             Explicit READ-ONLY (DEFAULT even if omitted).
+                     Always preferred. Produces Builder packet only.
+
+--fix                Opt-in apply in this session. NEVER default.
+                     Conflict of interest. /agentaudit refuses. /retentionaudit ignores.
+
+--tenant=            AGK | CLIENT | LEVERAGE | PERSONAL. Abort if unset.
 
 --focus={area}       Per-audit narrower phase selection with FULL depth.
                      Examples:
@@ -151,8 +175,8 @@ Parallel dispatch (4 work sessions or Agent Teams):
   /flowaudit  --files=$FILES --ticket=$T --url=$URL
   /debugaudit --files=$FILES --ticket=$T --url=$URL
 
-Wait for all 4 to produce .linear-fix/$T/{audit}.json with score=100.
-If any < 100: fix-and-reaudit loop per rule 43 step 8b.
+Wait for all 4 to produce .linear-fix/$T/{audit}.json (READ-ONLY verdicts).
+If any < 100: hand fix-plan to Builder; re-audit in a FRESH session. Same-session auto-fix only if --fix was explicit.
 ```
 
 ### Octad (full audit)
@@ -167,7 +191,8 @@ Phase B (after Phase A completes — reads Phase A outputs):
   /debugaudit   — reads audits/.codeaudit/ (skip phantom-covered findings)
   /seoaudit     — reads audits/.perfaudit/verdict.json for CWV (skip re-measurement)
   /apiaudit     — reads audits/.dataaudit/verdict.json for schema types, produces audits/.apiaudit/verdict.json
-  /secaudit     — reads audits/.apiaudit/verdict.json for auth surfaces to exploit
+  /secaudit     — reads audits/.apiaudit/verdict.json for auth surfaces (inventory; no PoCs)
+  /agentaudit   — harness / MCP / tenancy (parallel with secaudit if those files exist; after tenant lock)
 
 NOTE: /apiaudit runs in Phase B (NOT Phase A) because it consumes /dataaudit output.
       /secaudit also runs in Phase B because it consumes /apiaudit output.
@@ -261,7 +286,7 @@ Run `/metaudit` automatically when:
 
 Metaudit scope flags:
 - `/metaudit` — full 20-phase scan
-- `/metaudit --focus arsenal` — 14 audits compliance only (fast)
+- `/metaudit --focus arsenal` — arsenal compliance only (fast; 19 audits as of v2)
 - `/metaudit --focus preamble` — Phase 1 only (hinge point)
 - `/metaudit --focus deprecation` — stale refs only
 - `/metaudit --focus banned-phrases` — rule 46 scan
@@ -293,8 +318,9 @@ When Oracle reports audit results back to the user:
 ```
 ✅ /codeaudit complete — score 100/100 (S, Fortress)
    Scope: 3 files, 1 page
-   Findings: 0 CRITICAL, 0 HIGH, 2 MEDIUM, 5 LOW (all auto-fixed)
-   Iterations: 2 (fix-and-reaudit loop)
+   Findings: 0 CRITICAL, 0 HIGH, 2 MEDIUM, 5 LOW (READ-ONLY — Builder packet written)
+   Mode: readonly
+   Next: hand fix-plan.json to Builder; re-audit in a fresh session
    Duration: 18min
    Report: audits/.codeaudit/verdict.md
    Next: /debugaudit for runtime verification (same scope)
@@ -348,7 +374,9 @@ One-line answer per common question:
 | "The design looks off" | `/uiuxaudit` + `/a11yaudit` (if contrast/readability) |
 | "Site feels slow" | `/perfaudit` |
 | "Users can't find what they need" | `/flowaudit` + `/seoaudit` |
-| "Can someone hack us?" | `/secaudit` (must follow `/apiaudit` for auth surfaces) |
+| "Can someone hack us?" | `/apiaudit` → `/secaudit` (app). Add `/agentaudit` for harness/MCP/YOLO |
+| "Is the agent harness safe?" | `/agentaudit` |
+| "Which audits for this PR?" | `/audit-pilot` (chooser) |
 | "Google isn't ranking us" | `/perfaudit` → `/seoaudit` |
 | "Form fields lost data" | `/flowaudit` (Phase 8 data integrity through flow) + `/dataaudit` |
 | "API returning wrong shape" | `/apiaudit` |
@@ -362,3 +390,4 @@ One-line answer per common question:
 ---
 
 *v1.0 — 2026-04-14. Referenced by /aisb, /godmode, /team, rule 43, rule 001-smart-routing.md.*
+*v2.0 — 2026-08-24. AGK Review→Audit→Afterwork. READ-ONLY default. /agentaudit. Dual runtime. 50-agent cap. One face.*

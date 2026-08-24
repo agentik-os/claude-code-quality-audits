@@ -9,14 +9,21 @@ description: >
   NOT a user-invokable skill — this is a shared source of truth referenced by all audit skills.
 ---
 
-# Audit Verification Contract v1.1 — "Do No Harm"
+# Audit Verification Contract v2.0 — "Do No Harm"
 
 > **An audit that breaks working functionality is a failure, regardless of score improvement.**
-> Before calling any fix "done", prove the thing you touched still works — AND wasn't broken before.
+> **Default: do not touch the product.** Findings + Builder packet only.
+> Before calling any `--fix` "done", prove the thing you touched still works — AND wasn't broken before.
 
 > **v1.1 changelog (2026-04-17):** formalized the HINGE {DOMAIN} pattern,
 > documented mandatory minimums (phase count, score normalization, Phase N-1
 > / N+4), clarified the 16 Quality Arsenal skills the contract applies to.
+>
+> **v2.0 changelog (2026-08-24):** READ-ONLY is the default. Fix phases (N through N+4)
+> apply **only** when `--fix` was explicit. Otherwise emit the plan and stop.
+> Re-audit after a Builder lands is a **fresh session**. Writer-done is not done.
+> `/agentaudit` added (hinge: HINGE AGENT PATH). `/a11yaudit` hinge unchanged; WCAG 2.2 AA.
+> Dual runtime (Claude commands + Cursor/Grok skills). One tenant per run.
 
 ---
 
@@ -33,7 +40,9 @@ violating any of them is not compliant and fails `/metaudit`.
 | 4 | **Score normalized to /100** (raw may be /100, /320, /360, /420, /540 — must include normalization formula `raw / max * 100 = /100`) | Cross-skill comparison |
 | 5 | **HINGE {DOMAIN}** identification before Phase 1 (10× scrutiny on the one thing that dominates the domain's risk/value) | Gestalt clarity gate — not all phases equal |
 | 6 | **Popper falsification** in each scored item (how would you disprove this claim?) | Epistemic rigor — prevents confirmation bias |
-| 7 | **Fix → re-audit loop** with explicit max iterations (typically 5) | Bounded recovery, prevents infinite loops |
+| 7 | **Plan + Builder handoff** (default). `--fix` loop only if explicit, max **3** same-session then stop. Re-audit = fresh session. | Auditor ≠ fixer. Prevents conflict of interest and infinite loops |
+| 9 | **`mode` + `tenant` in verdict.json** | Tenancy + READ-ONLY contract |
+| 10 | **RED:** secaudit/agentaudit never emit exploit PoCs | 2026 agentic safety |
 | 8 | **Final verdict gate** blocks 100/100 claim unless `before-after.md` shows 0 regressions | Contract enforcement |
 
 ### The HINGE {DOMAIN} Pattern (canonical)
@@ -46,6 +55,7 @@ element whose quality dominates the entire domain. The term "hinge" means
 |---|---|---|
 | `/codeaudit` | **HINGE POINT** (module/function) | Single module where reliability pivots |
 | `/secaudit` | **SECURITY HINGE POINT** | Auth/authorization boundary |
+| `/agentaudit` | **HINGE AGENT PATH** | Face → tools/MCP → privileged connector or null-session spawn |
 | `/uiuxaudit` | **HINGE COMPONENT** | Element that defines perceived quality |
 | `/a11yaudit` | **HINGE FLOW** | Primary accessible journey |
 | `/flowaudit` | **HINGE FLOW** | Journey that defines product's raison d'être |
@@ -71,9 +81,21 @@ document it in the Gestalt section (Phase 0), and never drift from it.
 
 ---
 
+## READ-ONLY DEFAULT (v2)
+
+If `--fix` is **absent**, skip Phase N (apply), N+1, N+2, N+3. Still produce:
+
+- `fix-plan.json` / `fix-plan.md` as a **Builder packet** (`status: pending_handoff`)
+- `fix-log.md` stating `no product files modified`
+- `before-after.md` may record "N/A — readonly; no apply"
+
+Phase N-1 baseline is still useful (prove the system was observed). Do not treat a READ-ONLY audit as incomplete for lack of applied fixes.
+
+Hippocratic tests below apply **only** when `--fix` ran.
+
 ## THE HIPPOCRATIC RULE
 
-**First, do no harm.** Every fix must pass 3 tests:
+**First, do no harm.** Every `--fix` apply must pass 3 tests:
 
 1. **BEFORE test** — Capture baseline functional state. Does the thing currently work?
 2. **FIX** — Apply the change.
@@ -269,4 +291,4 @@ If ANY check fails → mark status as NEEDS_REVIEW and do NOT claim "done".
 
 ---
 
-*"An audit that breaks a single working thing is worse than no audit. Measure twice, fix once, verify thrice."*
+*"An audit that breaks a single working thing is worse than no audit. Default: do not fix. Measure twice, hand off once, re-audit in a fresh session."*

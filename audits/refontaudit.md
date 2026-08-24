@@ -136,7 +136,7 @@ All artifacts land in `.refonte/{YYYY-MM-DD-HHMM}/`:
 ├── migration-plan.md           Phase 20  — Phased rollout
 ├── phase-1-changeset.md        Phase 21  — File-level changeset
 ├── hinge-point.md              Phase 22  — 10x scrutiny [HINGE VERIFY x2]
-├── a11y-plan.md                Phase 23  — WCAG 2.1 AA mapping
+├── a11y-plan.md                Phase 23  — WCAG 2.2 AA mapping
 ├── motion-specs.md             Phase 24  — Purposeful motion only
 ├── REFONTE.md                  Phase 25  — Final consolidated deliverable
 └── components/                 Phase 26  — [OPTIONAL] Real composite components
@@ -536,7 +536,7 @@ Fail 2+ → go back to Phase 13. Partial on 3+ → revisit those scenarios.
 Output: `hinge-point.md`
 
 #### Phase 23 — Accessibility plan [/20]
-- Map every new/improved page to WCAG 2.1 AA
+- Map every new/improved page to WCAG 2.2 AA
 - Keyboard reachability, focus order, color contrast (all token pairs >= 4.5:1), ARIA roles for custom components
 - Output: `a11y-plan.md`
 
