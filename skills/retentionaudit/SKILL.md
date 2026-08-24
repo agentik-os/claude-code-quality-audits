@@ -1,43 +1,36 @@
 ---
 name: retentionaudit
 description: >
-  Product/CPO frameworks audit. ALWAYS READ-ONLY. Use when the user wants What to build next, Hooked/JTBD/Moments/Fogg, RICE.
-  Loads the long protocol from audits/retentionaudit.md. Default READ-ONLY.
-  One AGK Audit face — do not spawn a dedicated chat for this audit.
+  Product/CPO frameworks audit (Hooked, JTBD, Moments, Fogg, RICE).
+  ALWAYS READ-ONLY — proposes a roadmap, never edits code or schema.
+  This skill does not apply patches. Loads audits/retentionaudit.md.
+  One AGK Audit face — do not spawn a dedicated chat.
 ---
 
 # retentionaudit — skill wrapper
 
 ## When to use
-What to build next, Hooked/JTBD/Moments/Fogg, RICE.
+What to build next, retention hooks, CPO opportunity scan.
 
 ## When not to use
-PRD completeness of what exists → featureaudit.
+PRD completeness of what already exists → featureaudit.
 
 ## Runtime
-Claude Code command (`/retentionaudit`) **and** Cursor / Grok Bot skill.
-Grok Bot hard-caps 50 agents. Stay on the **AGK Audit** face.
+Claude: `/retentionaudit`. Cursor / Grok: this skill on the AGK Audit face.
 
 ## Default posture
-READ-ONLY findings. Do not edit the product.
-There is **no `--fix` path** on AGK Audit. Apply requires a **different agent**
-(Builder: Omega `claude|codex|glm`, or Cursor Cloud on CLIENT).
-Re-audit is a **fresh session**.
-
+**ALWAYS READ-ONLY.** This skill never writes product files. It does not take an
+apply flag. If a user asks this skill to implement a proposal, refuse and tell
+them to dispatch a Builder (`/planner` or `/implement`) in a different session.
 
 ## Tenancy
-One tenant per run (`AGK` | `CLIENT` | `LEVERAGE` | `PERSONAL`).
-Never load sibling-client secrets. CLIENT never on Omega.
-Abort if tenant is unset.
+One tenant per run. Abort if unset. CLIENT never on Omega.
 
 ## Recipe
-1. Confirm tenant. Abort if unset. CLIENT never on Omega.
-2. Obey the **AGK-AUDIT-OVERRIDE-V2** block in the first 100 lines of `audits/retentionaudit.md` before the rest of that file.
-3. Tools: Read, Glob, Grep only (plus WebSearch/WebFetch if that body lists them). No Write, Edit, or Bash.
-4. Label each finding `tool-backed` | `llm-judgment` | `inventory-only`.
-5. Emit the 8-file output contract under `audits/.retentionaudit/` with `mode=readonly`.
-6. Write a Builder packet. Do not apply. Do not re-audit your own patches.
-
+1. Confirm tenant.
+2. Obey **AGK-AUDIT-OVERRIDE-V2** in the first 100 lines of `audits/retentionaudit.md`.
+3. Tools: Read, Glob, Grep, WebSearch, WebFetch. No Write, Edit, or Bash.
+4. Write reports under `audits/.retentionaudit/` only. Never edit the product.
 
 ## Full protocol
 See [`audits/retentionaudit.md`](../../audits/retentionaudit.md).

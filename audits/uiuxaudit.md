@@ -14,7 +14,7 @@ allowed-tools: ["Read", "Glob", "Grep"]
 > ## OVERRIDE — OBEY BEFORE THE REST OF THIS FILE
 >
 > This block sits in the first 100 lines on purpose. It **supersedes** every later
-> section: FIX EXECUTION, “Audit → Plan → Fix → Re-audit”, allowed-tools expansions,
+> section: FIX EXECUTION, “Audit → Plan → Builder handoff (READ-ONLY)”, allowed-tools expansions,
 > `--fix` / `--fix-only`, commits of patches, and any instruction to Write/Edit/Bash
 > product files or run schema migrations.
 >
@@ -170,7 +170,7 @@ Every `/uiuxaudit` run produces these files. Oracles, AISB, and monitor.py read 
 ├── design-fix-plan.json       # {tasks: [{id, finding, type, files, current, fix, reference_page, status}]}
 ├── design-fix-plan.md         # Human-readable fix plan with priority order
 ├── progress.json              # Live: {total, done, failed, remaining, current}
-└── fix-log.md                 # Append-only log of fixes applied
+└── fix-log.md                 # READ-ONLY: must say "no product files modified"
 ```
 
 **CRITICAL:** `progress.json` format (read by Telegram bot monitor for live progress cards):
@@ -1231,7 +1231,7 @@ FINAL REPORT:
 
 > *"A design audit that doesn't fix is a Dribbble comment. Useless."*
 
-After the verdict, AUTOMATICALLY generate and execute the fix plan.
+After the verdict, AUTOMATICALLY generate a Builder packet (do not execute or apply).
 
 ```
 1. PRIORITIZE ALL FINDINGS
@@ -1387,29 +1387,29 @@ When deeper analysis or fixing is needed, invoke:
 ```
 IF during Phase 21.5 (Functional Bug Detection) you find:
   - Data not displaying → READ the component, the query/mutation, the API
-    → FIX the root cause (broken query, wrong filter, missing data fetch)
+    → RECORD the root cause in the Builder packet (do not edit)
   - Button doesn't work → READ the onClick handler, trace the call chain
-    → FIX the handler, the API call, the mutation
+    → RECORD the handler/API/mutation finding (do not edit)
   - Feature completely broken → Investigate data layer + rendering
-    → FIX whatever is actually broken, from Convex mutation to React render
+    → RECORD the broken layer in the Builder packet (do not edit)
 
-IF during fix execution you need backend knowledge:
+IF during Builder handoff you need backend knowledge:
   - Read the project's CLAUDE.md for stack info (Convex? Prisma? API routes?)
   - Read the data schema (convex/schema.ts, prisma/schema.prisma)
   - Trace: component → hook → API/mutation → database
-  - FIX at the correct layer
+  - RECORD the correct layer in the packet (do not apply)
 
-RULE: /uiuxaudit handles EVERYTHING it finds.
-Design inconsistency? Fix the CSS/component.
-Broken feature? Fix the code.
-Missing data? Fix the query.
-Bad UX because of slow API? Fix the API.
-No excuses. No punting. Fix it.
+RULE: /uiuxaudit records EVERYTHING it finds.
+Design inconsistency? Packet the CSS/component.
+Broken feature? Packet the code finding.
+Missing data? Packet the query.
+Bad UX because of slow API? Packet the API finding.
+No excuses. No punting. Do not apply.
 ```
 
 ---
 
-*"/uiuxaudit v3 — Audit. Plan. Fix. Verify. 23 phases, /420. Every pixel AND every feature leaves better than it entered."*
+*"/uiuxaudit v3 — Audit. Plan. Handoff. 23 phases, /420. Every pixel AND every feature leaves better than it entered."*
 
 ---
 
@@ -1422,7 +1422,7 @@ This audit implements contracts defined in `~/.claude/commands/QUALITY-ARSENAL-P
 - ✅ **Gestalt-Popper doctrine** — hinge point, falsification, evidence chain, adversarial thinking
 - ✅ **Concurrency lock** — `audits/.uiuxaudit/.lock` with 4h stale timeout, released on EXIT trap
 - ✅ **5-iteration cap** — fix-and-reaudit loop bounded at 5 iterations (rule 43 step 8b alignment). On cap: NEEDS_REVIEW + Telegram SOS. No silent infinite loops.
-- ✅ **Scoped invocation flags** — `--url=`, `--files=`, `--scope=`, `--ticket=`, `--no-fix`, `--focus=`
+- ✅ **Scoped invocation flags** — `--url=`, `--files=`, `--scope=`, `--ticket=`, `--focus=` (no apply flag)
 - ✅ **Non-UI context gate** — Non-UI contexts: ABORT with routing suggestions (/dxaudit, /copyaudit).
 - ✅ **Output contract verification** — emits `audits/.uiuxaudit/verdict.json`, `verdict.md`, `fix-plan.json`, `fix-plan.md`, `iterations.md`, `progress.json`, `telemetry.json`, `fix-log.md`. Output gate runs at end; missing/malformed files = audit did NOT succeed.
 - ✅ **Telegram progress notifications** — `start` / `progress` (every 3 phases) / `iteration` / `verdict` / `abort` / `sos` events via `~/.aisb/bin/audit-notify.sh`
@@ -1518,7 +1518,7 @@ Phase 0 step 0.5 (MANDATORY before any visual audit):
 Visual design has 25 orthogonal dimensions (colors, typography, coherence, spacing, hierarchy, motion, states, responsive, dark mode, brand, Gestalt, touch targets, a11y, smells, etc.). Other audits have fewer because fewer dimensions. Not a bug — documented in `QUALITY-ARSENAL-PREAMBLE.md §8`.
 
 **Gap 3: Skill handoff contracts → RESOLVED**
-When /uiuxaudit invokes other skills in Phase 23 fix execution:
+When /uiuxaudit invokes other skills in Phase 23 Builder handoff:
 - `Skill("shadcn-ui")` contract: pass `{component: name, issue: description, current_path: path}`, expect fix diff
 - `Skill("taste-skill")` contract: pass `{scope: page, violations: [...]}`, expect rewrite
 - `Skill("design-system")` contract: pass `{tokens_to_extract: [...]}`, expect tokens.css diff

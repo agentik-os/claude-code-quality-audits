@@ -4,9 +4,9 @@ description: >
   Forensic user flow audit v2. 25-phase deep analysis of every user journey, workflow, state machine,
   edge case, error recovery, and experience gap. Covers flow mapping, state verification, dead-end detection,
   permission gaps, data integrity through flows, onboarding completeness, cross-session continuity,
-  error recovery paths, accessibility of journeys, flow performance, plus verdict, fix plan, fix execution,
-  re-audit, and integration smoke gate.
-  Score /400. Preamble v1.0 compliant. Audit → Plan → Fix → Re-audit.
+  error recovery paths, accessibility of journeys, flow performance, plus verdict, Builder packet,
+  and fresh-session re-audit after a Builder. Always READ-ONLY.
+  Score /400. Preamble v2.0 compliant. Audit → Plan → Builder handoff.
   Use when user says "/flowaudit", "audit the flows", "check user journeys", "workflow audit", "flow review".
 allowed-tools: ["Read", "Glob", "Grep"]
 ---
@@ -16,7 +16,7 @@ allowed-tools: ["Read", "Glob", "Grep"]
 > ## OVERRIDE — OBEY BEFORE THE REST OF THIS FILE
 >
 > This block sits in the first 100 lines on purpose. It **supersedes** every later
-> section: FIX EXECUTION, “Audit → Plan → Fix → Re-audit”, allowed-tools expansions,
+> section: FIX EXECUTION, “Audit → Plan → Builder handoff (READ-ONLY)”, allowed-tools expansions,
 > `--fix` / `--fix-only`, commits of patches, and any instruction to Write/Edit/Bash
 > product files or run schema migrations.
 >
@@ -111,8 +111,7 @@ EXPLICIT SCOPED FLAGS (used by Linear rule 43 step 8 + multi-audit orchestration
     schema (score, skill_used, findings[], ticket) for rule 43 gate compliance
   → Never run without --url when --ticket is present
 
-  --no-fix
-  → Dry-run scoring only — skip Phase 22-23 fix execution
+  (no apply flag — AGK Audit is always READ-ONLY; Phase 23 is Builder handoff)
   → Still produces verdict.json + fix-plan.json, but does not modify code
   → Useful when user wants to review the fix plan before authorizing changes
 
@@ -1264,7 +1263,7 @@ A 100/100 score is now blocked unless:
 7. ✅ `confidence_basis` populated with non-trivial reasoning.
 
 Below threshold → score < 100, fix-and-reaudit loop kicks in (existing R-6 flow
-in the FIX EXECUTION / RE-AUDIT phases below). The loop is BOUNDED at 5
+in the BUILDER HANDOFF / RE-AUDIT phases below (AGK Audit does not apply)). The loop is BOUNDED at 5
 iterations per the Audit Verification Contract; on iteration 5 if still failing,
 emit `confidence: low` and surface as `pending` in `.done.json`.
 
@@ -1347,9 +1346,9 @@ Do **not** apply fixes in this session. If a Builder already landed changes in a
 ## CROSS-COMMAND BRIDGE
 
 ```
-/flowaudit discovers code bugs → creates FIX tasks (doesn't punt to /codeaudit)
-/flowaudit discovers UI issues → creates FIX tasks (doesn't punt to /uiuxaudit)
-/flowaudit discovers both → fixes both. It owns the flow end-to-end.
+/flowaudit discovers code bugs → records them in the Builder packet (doesn't punt to /codeaudit)
+/flowaudit discovers UI issues → records them in the Builder packet (doesn't punt to /uiuxaudit)
+/flowaudit discovers both → packets both. It owns the flow findings end-to-end. Do not apply.
 
 Integration:
   /codeaudit  →  Is the code correct?
@@ -1374,8 +1373,8 @@ Integration:
 
 ---
 
-*"/flowaudit v1.1 — Map. Walk. Break. Fix. Every path, every state, every edge case. /400."*
-*Updated 2026-04-14: scoped invocation flags (--url/--files/--scope/--ticket/--no-fix), non-UI context ABORT gate, Phase 24 5-iteration cap, Phase 0 concurrency lock + Telegram progress + discovery drift check.*
+*"/flowaudit v1.1 — Map. Walk. Break. Handoff. Every path, every state, every edge case. /400."*
+*Updated 2026-08-24: scoped invocation flags (--url/--files/--scope/--ticket). Always READ-ONLY. Phase 24 is fresh-session re-audit after Builder. Phase 0 concurrency lock + Telegram progress + discovery drift check.*
 
 ---
 

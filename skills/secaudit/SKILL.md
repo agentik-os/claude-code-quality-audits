@@ -2,8 +2,9 @@
 name: secaudit
 description: >
   Product-surface security audit (OWASP Top 10 2021 web + OWASP LLM Top 10
-  2025 in-app). Use for pre-prod, payment, auth, secrets, in-app MCP.
-  READ-ONLY. Never emit exploit PoCs. Harness/YOLO/tenancy → agentaudit.
+  2025 in-app). Score /460 full, /400 if LLM phases N/A. Use for pre-prod,
+  payment, auth, secrets, in-app MCP. READ-ONLY. Never emit exploit PoCs.
+  Harness/YOLO/tenancy → agentaudit.
 ---
 
 # secaudit — skill wrapper

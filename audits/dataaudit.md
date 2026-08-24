@@ -19,7 +19,7 @@ allowed-tools: ["Read", "Glob", "Grep"]
 > ## OVERRIDE — OBEY BEFORE THE REST OF THIS FILE
 >
 > This block sits in the first 100 lines on purpose. It **supersedes** every later
-> section: FIX EXECUTION, “Audit → Plan → Fix → Re-audit”, allowed-tools expansions,
+> section: FIX EXECUTION, “Audit → Plan → Builder handoff (READ-ONLY)”, allowed-tools expansions,
 > `--fix` / `--fix-only`, commits of patches, and any instruction to Write/Edit/Bash
 > product files or run schema migrations.
 >
@@ -976,7 +976,7 @@ A 100/100 score is now blocked unless:
 7. ✅ `confidence_basis` populated with non-trivial reasoning.
 
 Below threshold → score < 100, fix-and-reaudit loop kicks in (existing R-6 flow
-in the FIX EXECUTION / RE-AUDIT phases below). The loop is BOUNDED at 5
+in the BUILDER HANDOFF / RE-AUDIT phases below (AGK Audit does not apply)). The loop is BOUNDED at 5
 iterations per the Audit Verification Contract; on iteration 5 if still failing,
 emit `confidence: low` and surface as `pending` in `.done.json`.
 
@@ -1140,7 +1140,7 @@ This audit implements contracts defined in `~/.claude/commands/QUALITY-ARSENAL-P
 - ✅ **Gestalt-Popper doctrine** — hinge point, falsification, evidence chain, adversarial thinking
 - ✅ **Concurrency lock** — `audits/.dataaudit/.lock` with 4h stale timeout, released on EXIT trap
 - ✅ **5-iteration cap** — fix-and-reaudit loop bounded at 5 iterations (rule 43 step 8b alignment). On cap: NEEDS_REVIEW + Telegram SOS. No silent infinite loops.
-- ✅ **Scoped invocation flags** — `--url=`, `--files=`, `--scope=`, `--ticket=`, `--no-fix`, `--focus=`
+- ✅ **Scoped invocation flags** — `--url=`, `--files=`, `--scope=`, `--ticket=`, `--focus=` (no apply flag)
 - ✅ **Non-UI context gate** — Non-UI contexts: /dataaudit runs on any project with a DB. N/A for projects without data persistence.
 - ✅ **Output contract verification** — emits `audits/.dataaudit/verdict.json`, `verdict.md`, `fix-plan.json`, `fix-plan.md`, `iterations.md`, `progress.json`, `telemetry.json`, `fix-log.md`. Output gate runs at end; missing/malformed files = audit did NOT succeed.
 - ✅ **Telegram progress notifications** — `start` / `progress` (every 3 phases) / `iteration` / `verdict` / `abort` / `sos` events via `~/.aisb/bin/audit-notify.sh`

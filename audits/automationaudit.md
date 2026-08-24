@@ -5,7 +5,7 @@ description: >
   that RUNS AUTOMATICALLY: cron jobs, shell scripts, Python scripts, daemons, systemd timers, CI/CD
   pipelines, dispatch chains, orchestration logic, scheduling order, dependency graphs, error recovery,
   log rotation, dead automations, race conditions between scheduled tasks, secret exposure in scripts,
-  idempotency violations, silent failures, monitoring gaps, plus verdict, fix plan, fix execution,
+  idempotency violations, silent failures, monitoring gaps, plus verdict, fix plan, Builder handoff,
   re-audit. Score /400. Preamble v1.0 compliant.
   Use when user says "/automationaudit", "audit automations", "audit cron", "audit scripts",
   "check all my crons", "what scripts are running", "automation health", "scheduled tasks audit".
@@ -17,7 +17,7 @@ allowed-tools: ["Read", "Glob", "Grep"]
 > ## OVERRIDE — OBEY BEFORE THE REST OF THIS FILE
 >
 > This block sits in the first 100 lines on purpose. It **supersedes** every later
-> section: FIX EXECUTION, “Audit → Plan → Fix → Re-audit”, allowed-tools expansions,
+> section: FIX EXECUTION, “Audit → Plan → Builder handoff (READ-ONLY)”, allowed-tools expansions,
 > `--fix` / `--fix-only`, commits of patches, and any instruction to Write/Edit/Bash
 > product files or run schema migrations.
 >
@@ -998,19 +998,19 @@ Do **not** apply fixes in this session. If a Builder already landed changes in a
 
 ```
 IF during Phase 7 (Secret Exposure) you find secrets in code files:
-  → FIX the secret exposure (rotate key, move to .env)
-  → Don't defer to /secaudit — you own automation secrets
+  → RECORD the exposure (rotate key, move to .env) in the Builder packet
+  → Don't defer to /secaudit — you own automation secrets as findings
 
 IF during Phase 9 (Race Conditions) you find git conflicts from parallel workers:
-  → FIX the locking mechanism
+  → RECORD the locking finding in the Builder packet
   → Note for /codeaudit if the conflict pattern is in application code
 
 IF during Phase 12 (Dispatch Chains) you find oracle/worker bugs:
-  → FIX the dispatch logic
+  → RECORD the dispatch finding in the Builder packet
   → Note for /flowaudit if it affects user-facing flows
 
-RULE: /automationaudit handles EVERYTHING related to automation infrastructure.
-It doesn't punt to other audits. If it's automated and broken, fix it.
+RULE: /automationaudit records EVERYTHING related to automation infrastructure.
+It doesn't punt findings to other audits. If it's automated and broken, packet it. Do not apply.
 ```
 
 ---
@@ -1046,7 +1046,7 @@ This audit implements contracts from `~/.claude/commands/QUALITY-ARSENAL-PREAMBL
 - ✅ **Gestalt-Popper doctrine** — hinge automation, falsification, evidence chain
 - ✅ **Concurrency lock** — `audits/.automationaudit/.lock` with 4h stale timeout
 - ✅ **5-iteration cap** — fix-and-reaudit bounded
-- ✅ **Scoped invocation flags** — `--files=`, `--scope=`, `--focus=`, `--no-fix`
+- ✅ **Scoped invocation flags** — `--files=`, `--scope=`, `--focus=` (no apply flag)
 - ✅ **Non-UI context gate** — runs on ALL project types (automation is universal)
 - ✅ **Output contract verification** — all mandatory files emitted and verified
 - ✅ **Telegram progress notifications** — via `audit-notify.sh`

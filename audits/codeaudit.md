@@ -16,7 +16,7 @@ allowed-tools: ["Read", "Glob", "Grep"]
 > ## OVERRIDE — OBEY BEFORE THE REST OF THIS FILE
 >
 > This block sits in the first 100 lines on purpose. It **supersedes** every later
-> section: FIX EXECUTION, “Audit → Plan → Fix → Re-audit”, allowed-tools expansions,
+> section: FIX EXECUTION, “Audit → Plan → Builder handoff (READ-ONLY)”, allowed-tools expansions,
 > `--fix` / `--fix-only`, commits of patches, and any instruction to Write/Edit/Bash
 > product files or run schema migrations.
 >
@@ -1444,7 +1444,7 @@ A 100/100 score is now blocked unless:
 7. ✅ `confidence_basis` populated with non-trivial reasoning.
 
 Below threshold → score < 100, fix-and-reaudit loop kicks in (existing R-6 flow
-in the FIX EXECUTION / RE-AUDIT phases below). The loop is BOUNDED at 5
+in the BUILDER HANDOFF / RE-AUDIT phases below (AGK Audit does not apply)). The loop is BOUNDED at 5
 iterations per the Audit Verification Contract; on iteration 5 if still failing,
 emit `confidence: low` and surface as `pending` in `.done.json`.
 
@@ -1641,18 +1641,18 @@ IF during Phase 12.5 (Feature Verification) you find:
   - Empty content that should have data → finding on the query/mutation/render
   - Broken button/form → finding on the handler/API
 
-IF during Phase 22 (Fix Execution) you touch a frontend file:
-  - Navigate the page after fix → verify it looks correct
-  - If it looks wrong → your fix broke the UI → revert and try again
+IF during Phase 22 (Builder handoff) you record a frontend finding:
+  - Name the file and the visual symptom in the packet
+  - Do not edit CSS or product files in this session
 
-RULE: /codeaudit handles EVERYTHING it finds.
+RULE: /codeaudit records EVERYTHING it finds.
 It doesn't punt to /uiuxaudit. It doesn't punt to other audits.
-If it's broken, fix it. If it's ugly AND caused by code, fix it.
+If it's broken, packet it. If it's ugly AND caused by code, packet it. Do not apply.
 ```
 
 ---
 
-*"/codeaudit v3 — Audit. Plan. Fix. Verify. 23 phases, /420. The codebase leaves cleaner than it entered."*
+*"/codeaudit v3 — Audit. Plan. Handoff. 23 phases, /420. The codebase leaves cleaner than it entered."*
 
 ---
 
@@ -1665,7 +1665,7 @@ This audit implements contracts defined in `~/.claude/commands/QUALITY-ARSENAL-P
 - ✅ **Gestalt-Popper doctrine** — hinge point, falsification, evidence chain, adversarial thinking
 - ✅ **Concurrency lock** — `audits/.codeaudit/.lock` with 4h stale timeout, released on EXIT trap
 - ✅ **5-iteration cap** — fix-and-reaudit loop bounded at 5 iterations (rule 43 step 8b alignment). On cap: NEEDS_REVIEW + Telegram SOS. No silent infinite loops.
-- ✅ **Scoped invocation flags** — `--url=`, `--files=`, `--scope=`, `--ticket=`, `--no-fix`, `--focus=`
+- ✅ **Scoped invocation flags** — `--url=`, `--files=`, `--scope=`, `--ticket=`, `--focus=` (no apply flag)
 - ✅ **Non-UI context gate** — Non-UI contexts: /codeaudit runs on ALL project types (primary owner of code-quality for CLIs, libraries, backends).
 - ✅ **Output contract verification** — emits `audits/.codeaudit/verdict.json`, `verdict.md`, `fix-plan.json`, `fix-plan.md`, `iterations.md`, `progress.json`, `telemetry.json`, `fix-log.md`. Output gate runs at end; missing/malformed files = audit did NOT succeed.
 - ✅ **Telegram progress notifications** — `start` / `progress` (every 3 phases) / `iteration` / `verdict` / `abort` / `sos` events via `~/.aisb/bin/audit-notify.sh`

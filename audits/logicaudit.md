@@ -18,7 +18,7 @@ allowed-tools: ["Read", "Glob", "Grep"]
 > ## OVERRIDE — OBEY BEFORE THE REST OF THIS FILE
 >
 > This block sits in the first 100 lines on purpose. It **supersedes** every later
-> section: FIX EXECUTION, “Audit → Plan → Fix → Re-audit”, allowed-tools expansions,
+> section: FIX EXECUTION, “Audit → Plan → Builder handoff (READ-ONLY)”, allowed-tools expansions,
 > `--fix` / `--fix-only`, commits of patches, and any instruction to Write/Edit/Bash
 > product files or run schema migrations.
 >
@@ -871,7 +871,7 @@ Do **not** Read `~/.claude/audit-meta-protocol-v2.md` (not in this repo).
 - ✅ **Gestalt-Popper doctrine** — hinge logic, falsification with measurements, evidence chain
 - ✅ **Concurrency lock** — `audits/.logicaudit/.lock` with 4h stale timeout
 - ✅ **5-iteration cap** — fix-and-reaudit bounded
-- ✅ **Scoped invocation flags** — `--files=`, `--scope=`, `--focus=`, `--no-fix`
+- ✅ **Scoped invocation flags** — `--files=`, `--scope=`, `--focus=` (no apply flag)
 - ✅ **Non-UI context gate** — runs on ALL project types (logic is universal)
 - ✅ **Output contract verification** — all mandatory files emitted
 - ✅ **Telegram progress notifications** — via `audit-notify.sh`

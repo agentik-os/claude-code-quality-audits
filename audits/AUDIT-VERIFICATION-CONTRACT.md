@@ -38,7 +38,7 @@ violating any of them is not compliant and fails `/metaudit`.
 | 1 | **At least 16 scored phases** (## headings counted as audit work, not doc) | Forensic depth — fewer phases = shallow audit |
 | 2 | **Phase N-1 (PRE-FIX BASELINE)** implemented before first fix | Hippocratic rule — can't prove "no regression" without baseline |
 | 3 | **Phase N+4 (before-after matrix)** produced to `.{audit}/before-after.md` | Proof-of-work artifact required for 100/100 verdict |
-| 4 | **Score normalized to /100** (raw may be /100, /320, /360, /420, /540 — must include normalization formula `raw / max * 100 = /100`) | Cross-skill comparison |
+| 4 | **Score normalized to /100** (raw may be /100, /280, /320, /360, /400, /420, /460, /540 — must include `raw / applicable_raw_max * 100 = /100`; `/secaudit` full max is **460**, or **400** if LLM phases N/A) | Cross-skill comparison |
 | 5 | **HINGE {DOMAIN}** identification before Phase 1 (10× scrutiny on the one thing that dominates the domain's risk/value) | Gestalt clarity gate — not all phases equal |
 | 6 | **Popper falsification** in each scored item (how would you disprove this claim?) | Epistemic rigor — prevents confirmation bias |
 | 7 | **Plan + Builder handoff only.** No same-session apply on AGK Audit. Re-audit = fresh session. | Auditor ≠ fixer |
@@ -109,7 +109,7 @@ Without all 3, the fix is UNVERIFIED. Do NOT mark it done.
 
 ## MANDATORY PHASES FOR EVERY AUDIT
 
-Every audit (code/flow/logic/automation/debug/etc.) MUST add these phases AROUND its fix execution:
+These phases belong to the **Builder agent**, not AGK Audit. AGK Audit stops after the Builder packet. If a later document still says FIX EXECUTION, that text is void.
 
 ### Phase N-1: PRE-FIX BASELINE CAPTURE
 
@@ -132,9 +132,9 @@ For each file/resource about to be modified:
      Do NOT fix unrelated broken things. Note and move on.
 ```
 
-### Phase N: APPLY FIX (existing behavior)
+### Phase N: APPLY FIX (Builder only — not AGK Audit)
 
-Normal fix execution. Nothing changes here.
+AGK Audit never enters this phase. A Builder in a different session applies the packet.
 
 ### Phase N+1: POST-FIX VERIFICATION
 

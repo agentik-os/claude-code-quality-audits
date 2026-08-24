@@ -407,7 +407,7 @@ Read-only audits (/copyaudit text-only mode, /secaudit in dry-run) may skip this
 
 ## 13. SCORE NORMALIZATION (MANDATORY)
 
-Each audit has its own raw max (varies 280-420 across family). All report to /100:
+Each audit has its own raw max (varies 280–540 across family; `/secaudit` full max is **460**). All report to /100:
 
 ```
 normalized = round((raw_score / applicable_raw_max) * 100)
@@ -447,7 +447,7 @@ Narrower scope is achieved via `--focus` flag with FULL phase depth, never degra
 | /flowaudit | 400 | 25 | Yes | Never (AGK Audit) | No | User journeys |
 | /featureaudit | 320 | 19 | No | Never (AGK Audit) | Yes (WebSearch) | PRD completeness |
 | /perfaudit | 360 | 23 | No | Never (AGK Audit) | No | Core Web Vitals |
-| /secaudit | 400+ | 25+ | No | **Never (AGK Audit)** | Inventory; **no PoCs** | OWASP 2021 + LLM 2025 surfaces |
+| /secaudit | 460 (400 if LLM phases N/A) | 20 + 3 | No | **Never (AGK Audit)** | Inventory; **no PoCs** | OWASP 2021 + LLM 2025 surfaces |
 | /agentaudit | 360 | 16 | No | **Never** | No | Harness / MCP / tenancy / gates |
 | /a11yaudit | 320 | 21 | Partial | **Never (AGK Audit)** | No | WCAG 2.2 AA |
 | /seoaudit | 400 | 25 | Partial | Never (AGK Audit) | Yes (crawl) | Crawlability, GEO/AEO |

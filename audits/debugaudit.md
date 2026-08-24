@@ -6,7 +6,7 @@ description: >
   responsive breakage, performance bottlenecks, dead features, race conditions, state corruption,
   plus verdict, fix plan, Builder handoff, and integration smoke gate.
   Replaces /hunt + /maniac as the single forensic-grade runtime bug hunting pipeline.
-  Score /360. Preamble v1.0 compliant. Audit → Plan → Fix → Re-audit.
+  Score /360. Preamble v1.0 compliant. Audit → Plan → Builder handoff (READ-ONLY).
   Use when user says "/debugaudit", "find bugs", "what's broken", "hunt bugs", "debug everything",
   "hunt", "maniac", "find all bugs".
 allowed-tools: ["Read", "Glob", "Grep"]
@@ -17,7 +17,7 @@ allowed-tools: ["Read", "Glob", "Grep"]
 > ## OVERRIDE — OBEY BEFORE THE REST OF THIS FILE
 >
 > This block sits in the first 100 lines on purpose. It **supersedes** every later
-> section: FIX EXECUTION, “Audit → Plan → Fix → Re-audit”, allowed-tools expansions,
+> section: FIX EXECUTION, “Audit → Plan → Builder handoff (READ-ONLY)”, allowed-tools expansions,
 > `--fix` / `--fix-only`, commits of patches, and any instruction to Write/Edit/Bash
 > product files or run schema migrations.
 >
@@ -718,7 +718,7 @@ FOR EACH breakpoint, FOR EACH page:
    → Is the logger at INFO or higher? If WARNING, you're blind to 80% of issues
    → grep "setLevel\|basicConfig" in config/logging setup
    → If no explicit level: default is WARNING → blind spot
-   → FIX: force INFO or DEBUG during audit
+   → RECORD: if logger is not INFO/DEBUG, recommend raising it for authorized observation (do not mutate config)
 ```
 
 ---
@@ -1089,7 +1089,7 @@ A 100/100 score is now blocked unless:
 7. ✅ `confidence_basis` populated with non-trivial reasoning.
 
 Below threshold → score < 100, fix-and-reaudit loop kicks in (existing R-6 flow
-in the FIX EXECUTION / RE-AUDIT phases below). The loop is BOUNDED at 5
+in the BUILDER HANDOFF / RE-AUDIT phases below (AGK Audit does not apply)). The loop is BOUNDED at 5
 iterations per the Audit Verification Contract; on iteration 5 if still failing,
 emit `confidence: low` and surface as `pending` in `.done.json`.
 
@@ -1209,9 +1209,9 @@ WAVE 5 (environment — parallel):
 ## CROSS-COMMAND BRIDGE
 
 ```
-/debugaudit finds code issues → fixes them (doesn't punt to /codeaudit)
-/debugaudit finds design issues → fixes them (doesn't punt to /uiuxaudit)
-/debugaudit finds flow issues → fixes them (doesn't punt to /flowaudit)
+/debugaudit finds code issues → records them in the Builder packet (doesn't punt to /codeaudit)
+/debugaudit finds design issues → records them in the Builder packet (doesn't punt to /uiuxaudit)
+/debugaudit finds flow issues → records them in the Builder packet (doesn't punt to /flowaudit)
 
 THE QUALITY QUADFECTA:
   /codeaudit   → Is the code SOLID?          (preventive)
@@ -1249,7 +1249,7 @@ This audit implements contracts defined in `~/.claude/commands/QUALITY-ARSENAL-P
 - ✅ **Gestalt-Popper doctrine** — hinge point, falsification, evidence chain, adversarial thinking
 - ✅ **Concurrency lock** — `audits/.debugaudit/.lock` with 4h stale timeout, released on EXIT trap
 - ✅ **5-iteration cap** — fix-and-reaudit loop bounded at 5 iterations (rule 43 step 8b alignment). On cap: NEEDS_REVIEW + Telegram SOS. No silent infinite loops.
-- ✅ **Scoped invocation flags** — `--url=`, `--files=`, `--scope=`, `--ticket=`, `--no-fix`, `--focus=`
+- ✅ **Scoped invocation flags** — `--url=`, `--files=`, `--scope=`, `--ticket=`, `--focus=` (no apply flag)
 - ✅ **Non-UI context gate** — Non-UI contexts: log-based mode for CLI tools (parse stdout/stderr + exit codes as "console output"). ABORT for pure libraries.
 - ✅ **Output contract verification** — emits `audits/.debugaudit/verdict.json`, `verdict.md`, `fix-plan.json`, `fix-plan.md`, `iterations.md`, `progress.json`, `telemetry.json`, `fix-log.md`. Output gate runs at end; missing/malformed files = audit did NOT succeed.
 - ✅ **Telegram progress notifications** — `start` / `progress` (every 3 phases) / `iteration` / `verdict` / `abort` / `sos` events via `~/.aisb/bin/audit-notify.sh`
