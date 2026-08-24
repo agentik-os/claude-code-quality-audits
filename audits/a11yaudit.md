@@ -2,40 +2,38 @@
 name: a11yaudit
 description: >
   Forensic accessibility audit v1 (Gestalt-Popper). 21-phase deep analysis of every
-  accessibility surface: WCAG 2.1 AA compliance, keyboard navigation (every interactive element),
+  accessibility surface: WCAG 2.2 AA compliance, keyboard navigation (every interactive element),
   screen reader testing, ARIA labels/roles/states, color contrast (4.5:1 AA, 3:1 large text),
   focus management, skip navigation, form labels, error announcements, alt text, heading hierarchy,
   landmark regions, touch targets (44px), motion/animation preferences, cognitive load, reading level,
-  plus verdict, fix plan, fix execution, re-audit, and integration smoke gate.
-  Score /320. Preamble v1.0 compliant. Audit -> Plan -> Fix -> Re-audit.
+  plus verdict, fix plan, Builder handoff, and integration smoke gate.
+  Score /320. Preamble v2.0. Default READ-ONLY (Audit → Plan/handoff). Apply is forbidden for AGK Audit.
   Use when user says "/a11yaudit", "accessibility audit", "wcag audit", "a11y check",
   "keyboard navigation test", "screen reader test", "color contrast check".
-allowed-tools: ["Read", "Write", "Edit", "Bash", "Glob", "Grep", "Agent", "TaskCreate", "TaskUpdate", "TaskList", "TaskGet"]
+allowed-tools: ["Read", "Glob", "Grep"]
 ---
 
-<!-- AUDIT-META-V2-INJECTED -->
+<!-- AGK-AUDIT-OVERRIDE-V2 -->
 
-> ## ⚠️ MANDATORY FIRST STEP — READ THE V2 META-PROTOCOL
+> ## OVERRIDE — OBEY BEFORE THE REST OF THIS FILE
 >
-> **Before doing ANYTHING else**, Read `~/.claude/audit-meta-protocol-v2.md`.
+> This block sits in the first 100 lines on purpose. It **supersedes** every later
+> section: FIX EXECUTION, “Audit → Plan → Builder handoff (READ-ONLY)”, allowed-tools expansions,
+> `--fix` / `--fix-only`, commits of patches, and any instruction to Write/Edit/Bash
+> product files or run schema migrations.
 >
-> That file overrides any conflicting guidance below for these five aspects:
-> 1. Required CLI inputs (`--user-need`, `--hinge` are MANDATORY since 2026-05-08)
-> 2. Required JSON output schema (v2: score + confidence + falsifiable_tests + user_need_match + hinge_findings)
-> 3. Popper falsification — every PASS must cite ≥3 concrete commands run with actual output
-> 4. Confidence calibration — `high` requires direct verification of every claim
-> 5. Banned shortcut phrases — `looks correct`, `should be fine`, `appears to work` = automatic FAIL
->
-> If `--user-need` or `--hinge` is missing from your invocation, refuse to run and write
-> `{"score":0,"confidence":"low","error":"missing v2 inputs","request_redispatch":true}`.
->
-> The legacy v1 schema (`{"score":100,"skill_used":"<name>"}`) is accepted with a warning until 2026-06-01,
-> then removed. Always emit v2 going forward.
->
-> Model context: this audit runs on Opus 4.7 with max effort. There is no time pressure.
-> Run every test you claim to have run. Cite verbatim outputs. No exceptions.
+> 1. You are **AGK Audit**. Auditor ≠ fixer. You do **not** write product code or schema.
+> 2. Allowed tools: **Read, Glob, Grep** only (plus WebSearch/WebFetch if the frontmatter lists them). **No Write, Edit, or Bash.**
+> 3. Pipeline: **Audit → Plan (Builder packet) → STOP.** There is no apply phase on this agent.
+> 4. `--fix` and `--fix-only` are **forbidden for AGK Audit**. Apply requires a **different agent** (Builder: Omega `claude` | `codex` | `glm`, or Cursor Cloud on CLIENT). A flag or a chat “yes” is not enough for destructive apply.
+> 5. Do **not** Read `~/.claude/audit-meta-protocol-v2.md` (that file is not in this repository). Ignore AUDIT-META-V2-INJECTED if it appears below.
+> 6. Banned phrases (automatic FAIL): `looks correct`, `should be fine`, `appears to work`.
+> 7. `verdict.json.mode` is always `"readonly"`. `fix-log.md` states `no product files modified`.
+> 8. Re-audit after a Builder lands is a **fresh session**, not this one.
+> 9. `/retentionaudit` is always READ-ONLY. `/agentaudit` and `/secaudit` never emit exploit PoCs.
 
 ---
+
 
 # /a11yaudit v1 — Forensic Accessibility Audit (Gestalt-Popper)
 
@@ -265,9 +263,11 @@ in your `verdict.json` and bump severity by one level.
 
 ---
 
-## PHASE 1: WCAG 2.1 AA COMPLIANCE AUDIT
+## PHASE 1: WCAG 2.2 AA COMPLIANCE AUDIT
 
-> *"The law says AA. Most sites fail Level A. That's not a gap — it's a chasm."*
+> *"The law says AA. WCAG 2.2 is the current W3C Recommendation this protocol claims. Most sites fail Level A. That's not a gap — it's a chasm."*
+
+**Tool-backed vs LLM-judgment:** axe-core / Playwright = tool-backed. Manual keyboard, SR flow, and 2.2-only criteria that your axe version does not cover = LLM-judgment (or manual) — label them.
 
 ```
 FOR EVERY discoverable page:
@@ -290,12 +290,18 @@ FOR EVERY discoverable page:
    -> 2.3.1 Three flashes: no content flashes > 3 times/second
    -> 2.4.x Navigation: skip links, page titles, focus order, link purpose
    -> 2.5.x Input modalities: pointer gestures, pointer cancellation, label in name, motion actuation
+   -> **2.4.11 Focus Not Obscured (Minimum) — 2.2 AA:** focused item not entirely hidden by sticky headers/cookie banners
+   -> **2.5.7 Dragging Movements — 2.2 AA:** drag-only UI has a single-pointer alternative
+   -> **2.5.8 Target Size (Minimum) — 2.2 AA:** 24×24 CSS px (distinct from 2.5.5 44×44 AAA / older 44px notes)
 
 3. UNDERSTANDABLE (WCAG 3.x)
    -> 3.1.1 Language of page: lang attribute present
    -> 3.1.2 Language of parts: foreign phrases marked
    -> 3.2.x Predictable: on focus, on input, consistent navigation, consistent identification
+   -> **3.2.6 Consistent Help — 2.2 A:** help mechanism in the same relative order when repeated
    -> 3.3.x Input assistance: error identification, labels, error suggestion, error prevention
+   -> **3.3.7 Redundant Entry — 2.2 A:** do not re-ask information the user already gave in the same process
+   -> **3.3.8 Accessible Authentication (Minimum) — 2.2 AA:** no cognitive test that requires recalling a password *from memory* to paste (allow password managers / copy-paste)
 
 4. ROBUST (WCAG 4.x)
    -> 4.1.1 Parsing: valid HTML (no duplicate IDs)
@@ -1114,7 +1120,7 @@ A 100/100 score is now blocked unless:
 7. ✅ `confidence_basis` populated with non-trivial reasoning.
 
 Below threshold → score < 100, fix-and-reaudit loop kicks in (existing R-6 flow
-in the FIX EXECUTION / RE-AUDIT phases below). The loop is BOUNDED at 5
+in the BUILDER HANDOFF / RE-AUDIT phases below (AGK Audit does not apply)). The loop is BOUNDED at 5
 iterations per the Audit Verification Contract; on iteration 5 if still failing,
 emit `confidence: low` and surface as `pending` in `.done.json`.
 
@@ -1126,7 +1132,7 @@ Score each phase 0-10, weight by severity:
 
 ```
 SCORING MATRIX (320 max):
-  Phase  1  (WCAG 2.1 AA Compliance)    x 3.0  = max 30
+  Phase  1  (WCAG 2.2 AA Compliance)    x 3.0  = max 30
   Phase  2  (Keyboard Navigation)       x 4.0  = max 40  ** HINGE **
   Phase  3  (Screen Reader)             x 3.0  = max 30
   Phase  4  (ARIA Labels/Roles/States)  x 2.5  = max 25
@@ -1147,7 +1153,7 @@ SCORING MATRIX (320 max):
 NORMALIZE: score = (raw / 320) x 100
 
 GRADE:
-  90-100: S — Exemplary. Meets WCAG 2.1 AA, keyboard perfect, screen reader excellent.
+  90-100: S — Exemplary. Meets WCAG 2.2 AA, keyboard perfect, screen reader excellent.
   80-89:  A — Strong. Minor gaps, all primary flows accessible.
   70-79:  B — Adequate. Some barriers, most flows accessible with workarounds.
   60-69:  C — Deficient. Significant barriers, some flows blocked.
@@ -1169,82 +1175,26 @@ Save to audits/.a11yaudit/fix-plan.json + fix-plan.md
 
 ---
 
-## PHASE 19: FIX EXECUTION (automatic)
+## PHASE 19: BUILDER HANDOFF (not apply)
 
-```
-Sequential per barrier group.
+> **Auditor ≠ fixer.** The apply pipeline that used to live here is **removed**, not gated.
 
-─── SAFETY GATE: DO NO HARM (MANDATORY before EVERY fix) ──────────────
+Write `fix-plan.json` / `fix-plan.md` as a **Builder packet** only:
+- `status: pending_handoff`
+- `auditor_must_not_apply: true`
+- One task per finding (file, severity, recommendation class — not a patch)
 
-The audit MUST NOT introduce new bugs. A fix that breaks the code is worse than
-the original finding. Every fix goes through this gate BEFORE commit.
+**Forbidden in this session:** Write/Edit product files, schema/data writes, `git commit` of fixes, `--fix`, `--fix-only`.
 
-PRE-FIX ANALYSIS (before writing ANY code):
-  a. Read the ENTIRE target file (not just the target line)
-  b. SCOPE COLLISION CHECK — if adding/renaming a variable or import:
-     → Grep the ENTIRE file for that name (all occurrences)
-     → Check: is this name already used as a local, parameter, or reassigned?
-     → Check: does this name get shadowed later in the same scope?
-     → If collision found → use a different name or fully-qualified reference
-  c. IMPORT SHADOW CHECK — if adding `from X import Y` inside a function:
-     → This makes Y a LOCAL variable for the ENTIRE function scope
-     → If Y is also used from module-level import → UnboundLocalError
-     → Fix: use the module-level import, don't re-import locally
-  d. CROSS-REFERENCE CHECK — if modifying a function signature, class, or export:
-     → Grep the ENTIRE project for all callers/importers of that symbol
-     → Verify every caller still works with the new signature
-     → If callers exist outside the file → update them ALL or don't change
+Hand the packet to a **Builder** (Omega `claude` | `codex` | `glm`, or Cursor Cloud on CLIENT). Re-audit in a **fresh session**.
 
-POST-FIX VERIFICATION (after writing code, BEFORE commit):
-  a. SYNTAX CHECK:
-     → Python: `python -c "import ast; ast.parse(open('FILE').read())"`
-     → JS/TS: `npx tsc --noEmit` or `node -c FILE`
-  b. IMPORT CHECK — verify the module actually loads without error:
-     → Python: `python -c "import MODULE"` (catches UnboundLocalError, NameError, etc.)
-     → JS: `node -e "require('./FILE')"`
-  c. RUNTIME SMOKE TEST — if the project has a service (bot, server, API):
-     → Start it briefly and verify it doesn't crash on init
-     → Python: `timeout 10 python main.py` or systemctl restart + is-active check
-     → Node: `timeout 10 node server.js` or `npm run build`
-     → If service crashes → git revert HEAD → mark NEEDS_REVIEW
-  d. TEST SUITE — if tests exist:
-     → Run the relevant test file(s): `pytest FILE -x` / `vitest run FILE`
-     → If tests fail → git revert HEAD → investigate
-
-IF ANY POST-FIX CHECK FAILS:
-  → `git revert HEAD` immediately
-  → Log the failure in .audit/fix-log.md with exact error
-  → Mark as NEEDS_REVIEW (never retry same approach blindly)
-  → Try alternative approach OR skip this fix
-
-────────────────────────────────────────────────────────────────────────
-
-FOR EACH FIX TASK (in priority order):
-  a. Read the ENTIRE target file (full context)
-  b. Run PRE-FIX ANALYSIS (scope collision, import shadow, cross-reference)
-  c. Apply fix (semantic HTML preferred over ARIA)
-  d. Run POST-FIX VERIFICATION (syntax, import, smoke test, tests)
-  e. If all green → commit: a11y(a11yaudit): FIX-XXX description
-  f. If any red → revert → log → mark NEEDS_REVIEW
-  g. Verify: no regression in other accessibility features
-```
-
----
+`fix-log.md` MUST say: `no product files modified`.
 
 ## PHASE 20: RE-AUDIT (automatic)
 
-```
-1. SERVICE HEALTH GATE (mandatory):
-   → If project has systemd service: restart it, wait 10s, check is-active + logs for errors
-   → If project has build step: full build must pass
-   → If project has tests: full test suite must pass
-   → If ANY fails: identify which fix broke it, revert
+Do **not** apply fixes in this session. If a Builder already landed changes in a **prior** fresh session, re-score only those files. Otherwise stop after the Builder packet.
 
-2. Re-run all FAILING phases. Compare before/after.
-3. Loop until score >= 80 or remaining items are NEEDS_REVIEW.
-```
-
----
+`iterations.md`: `cycles=0 mode=readonly`.
 
 ## PARALLEL EXECUTION STRATEGY
 
@@ -1336,7 +1286,7 @@ This audit implements contracts defined in `~/.claude/commands/QUALITY-ARSENAL-P
 - ✅ **Gestalt-Popper doctrine** — hinge point, falsification, evidence chain, adversarial thinking
 - ✅ **Concurrency lock** — `audits/.a11yaudit/.lock` with 4h stale timeout, released on EXIT trap
 - ✅ **5-iteration cap** — fix-and-reaudit loop bounded at 5 iterations (rule 43 step 8b alignment). On cap: NEEDS_REVIEW + Telegram SOS. No silent infinite loops.
-- ✅ **Scoped invocation flags** — `--url=`, `--files=`, `--scope=`, `--ticket=`, `--no-fix`, `--focus=`
+- ✅ **Scoped invocation flags** — `--url=`, `--files=`, `--scope=`, `--ticket=`, `--focus=` (no apply flag)
 - ✅ **Non-UI context gate** — Non-UI contexts: for CLI tools, check for screen-reader-friendly terminal output (no unicode-only bar charts, no color-only status). ABORT for pure libraries.
 - ✅ **Output contract verification** — emits `audits/.a11yaudit/verdict.json`, `verdict.md`, `fix-plan.json`, `fix-plan.md`, `iterations.md`, `progress.json`, `telemetry.json`, `fix-log.md`. Output gate runs at end; missing/malformed files = audit did NOT succeed.
 - ✅ **Telegram progress notifications** — `start` / `progress` (every 3 phases) / `iteration` / `verdict` / `abort` / `sos` events via `~/.aisb/bin/audit-notify.sh`
@@ -1492,16 +1442,16 @@ After v1.2 compliance round:
 
 ---
 
-## MANDATORY BEFORE/AFTER VERIFICATION (v1.1)
+## MANDATORY BEFORE/AFTER VERIFICATION (v2 — Builder, not AGK Audit)
 
-**Read `~/.claude/commands/AUDIT-VERIFICATION-CONTRACT.md` before ANY fix execution.**
+AGK Audit **does not apply**. This Hippocratic checklist is for the **Builder agent** after handoff — a different process, a different session.
 
-Every fix MUST follow the "Do No Harm" protocol:
+This auditor:
+1. Observes (Read/Glob/Grep).
+2. Writes `fix-plan.json` with `pending_handoff`.
+3. Writes `fix-log.md`: `no product files modified`.
+4. Does **not** claim 100/100 because patches were applied.
 
-1. **PRE-FIX BASELINE** — grep all references, capture functional state, save to `.{audit}/baseline/`.
-2. **APPLY FIX** — normal execution.
-3. **POST-FIX CHECK** — repeat every baseline check. If any PASSED→FAILED transition occurs, revert immediately.
-4. **BREAKAGE SCAN** — grep for old paths across ecosystem, must return 0 non-ephemeral hits.
-5. **BEFORE/AFTER MATRIX** — produce `.{audit}/before-after.md` with functional status table per affected item.
+Do **not** Read `~/.claude/audit-meta-protocol-v2.md` (not in this repo).
 
-**An audit that breaks 1 working thing is WORSE than no audit.** Do NOT claim "done" without `before-after.md` showing zero regressions.
+

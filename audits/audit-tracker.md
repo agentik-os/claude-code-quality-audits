@@ -52,7 +52,8 @@ Bootstrap audits infrastructure in the current project:
 
    - `/audit-orchestrator quick` — gut-check (15 min)
    - `/audit-orchestrator standard` — regular quality cycle (60 min)
-   - `/audit-orchestrator full` — complete arsenal (4h)
+   - `/audit-orchestrator full` — complete arsenal (19 audits, READ-ONLY)
+   - `/agentaudit` — harness / MCP / tenancy if this repo is agentic
 
    ## Past runs
 
@@ -136,7 +137,7 @@ Always end with **3 actionable recommendations** like:
 📋 Next actions:
 1. Re-run /perfaudit (last run 35d ago, scores drift)
 2. Push /apiaudit from C → A via 2 fix cycles
-3. Run /retentionaudit (never run, would unlock new feature ideas)
+3. Run /agentaudit if MCP/skills/providers exist (harness), else /retentionaudit (proposal-only)
 ```
 
 ## Sources

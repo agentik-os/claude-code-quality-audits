@@ -9,14 +9,22 @@ description: >
   NOT a user-invokable skill — this is a shared source of truth referenced by all audit skills.
 ---
 
-# Audit Verification Contract v1.1 — "Do No Harm"
+# Audit Verification Contract v2.0 — "Do No Harm"
 
 > **An audit that breaks working functionality is a failure, regardless of score improvement.**
-> Before calling any fix "done", prove the thing you touched still works — AND wasn't broken before.
+> **Default: do not touch the product.** Findings + Builder packet only.
+> Before calling any `--fix` "done", prove the thing you touched still works — AND wasn't broken before.
 
 > **v1.1 changelog (2026-04-17):** formalized the HINGE {DOMAIN} pattern,
 > documented mandatory minimums (phase count, score normalization, Phase N-1
 > / N+4), clarified the 16 Quality Arsenal skills the contract applies to.
+>
+> **v2.1 changelog (2026-08-24):** AGK Audit has **no `--fix` path**. Fix phases
+> (N through N+4 apply) are **Builder-only**, a different agent. This auditor
+> emits the plan and stops. Re-audit after a Builder lands is a **fresh session**.
+> Writer-done is not done.
+> `/agentaudit` added (hinge: HINGE AGENT PATH). `/a11yaudit` hinge unchanged; WCAG 2.2 AA.
+> Dual runtime (Claude commands + Cursor/Grok skills). One tenant per run.
 
 ---
 
@@ -30,10 +38,12 @@ violating any of them is not compliant and fails `/metaudit`.
 | 1 | **At least 16 scored phases** (## headings counted as audit work, not doc) | Forensic depth — fewer phases = shallow audit |
 | 2 | **Phase N-1 (PRE-FIX BASELINE)** implemented before first fix | Hippocratic rule — can't prove "no regression" without baseline |
 | 3 | **Phase N+4 (before-after matrix)** produced to `.{audit}/before-after.md` | Proof-of-work artifact required for 100/100 verdict |
-| 4 | **Score normalized to /100** (raw may be /100, /320, /360, /420, /540 — must include normalization formula `raw / max * 100 = /100`) | Cross-skill comparison |
+| 4 | **Score normalized to /100** (raw may be /100, /280, /320, /360, /400, /420, /460, /540 — must include `raw / applicable_raw_max * 100 = /100`; `/secaudit` full max is **460**, or **400** if LLM phases N/A) | Cross-skill comparison |
 | 5 | **HINGE {DOMAIN}** identification before Phase 1 (10× scrutiny on the one thing that dominates the domain's risk/value) | Gestalt clarity gate — not all phases equal |
 | 6 | **Popper falsification** in each scored item (how would you disprove this claim?) | Epistemic rigor — prevents confirmation bias |
-| 7 | **Fix → re-audit loop** with explicit max iterations (typically 5) | Bounded recovery, prevents infinite loops |
+| 7 | **Plan + Builder handoff only.** No same-session apply on AGK Audit. Re-audit = fresh session. | Auditor ≠ fixer |
+| 9 | **`mode` + `tenant` in verdict.json** | Tenancy + READ-ONLY contract |
+| 10 | **RED:** secaudit/agentaudit never emit exploit PoCs | 2026 agentic safety |
 | 8 | **Final verdict gate** blocks 100/100 claim unless `before-after.md` shows 0 regressions | Contract enforcement |
 
 ### The HINGE {DOMAIN} Pattern (canonical)
@@ -46,6 +56,7 @@ element whose quality dominates the entire domain. The term "hinge" means
 |---|---|---|
 | `/codeaudit` | **HINGE POINT** (module/function) | Single module where reliability pivots |
 | `/secaudit` | **SECURITY HINGE POINT** | Auth/authorization boundary |
+| `/agentaudit` | **HINGE AGENT PATH** | Face → tools/MCP → privileged connector or null-session spawn |
 | `/uiuxaudit` | **HINGE COMPONENT** | Element that defines perceived quality |
 | `/a11yaudit` | **HINGE FLOW** | Primary accessible journey |
 | `/flowaudit` | **HINGE FLOW** | Journey that defines product's raison d'être |
@@ -71,9 +82,21 @@ document it in the Gestalt section (Phase 0), and never drift from it.
 
 ---
 
+## READ-ONLY (v2.1 — AGK Audit)
+
+Skip Phase N (apply), N+1, N+2, N+3 on this agent. Always produce:
+
+- `fix-plan.json` / `fix-plan.md` as a **Builder packet** (`status: pending_handoff`)
+- `fix-log.md` stating `no product files modified`
+- `before-after.md` may record "N/A — readonly; no apply"
+
+Phase N-1 baseline is still useful (prove the system was observed). Do not treat a READ-ONLY audit as incomplete for lack of applied fixes.
+
+Hippocratic tests below are for the **Builder agent**, not AGK Audit. `--fix` is not a first-class path here.
+
 ## THE HIPPOCRATIC RULE
 
-**First, do no harm.** Every fix must pass 3 tests:
+**First, do no harm.** Every Builder apply (not AGK Audit) must pass 3 tests:
 
 1. **BEFORE test** — Capture baseline functional state. Does the thing currently work?
 2. **FIX** — Apply the change.
@@ -86,7 +109,7 @@ Without all 3, the fix is UNVERIFIED. Do NOT mark it done.
 
 ## MANDATORY PHASES FOR EVERY AUDIT
 
-Every audit (code/flow/logic/automation/debug/etc.) MUST add these phases AROUND its fix execution:
+These phases belong to the **Builder agent**, not AGK Audit. AGK Audit stops after the Builder packet. If a later document still says FIX EXECUTION, that text is void.
 
 ### Phase N-1: PRE-FIX BASELINE CAPTURE
 
@@ -109,9 +132,9 @@ For each file/resource about to be modified:
      Do NOT fix unrelated broken things. Note and move on.
 ```
 
-### Phase N: APPLY FIX (existing behavior)
+### Phase N: APPLY FIX (Builder only — not AGK Audit)
 
-Normal fix execution. Nothing changes here.
+AGK Audit never enters this phase. A Builder in a different session applies the packet.
 
 ### Phase N+1: POST-FIX VERIFICATION
 
@@ -269,4 +292,4 @@ If ANY check fails → mark status as NEEDS_REVIEW and do NOT claim "done".
 
 ---
 
-*"An audit that breaks a single working thing is worse than no audit. Measure twice, fix once, verify thrice."*
+*"An audit that breaks a single working thing is worse than no audit. Default: do not fix. Measure twice, hand off once, re-audit in a fresh session."*

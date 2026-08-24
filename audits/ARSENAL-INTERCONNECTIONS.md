@@ -24,8 +24,9 @@ description: >
 | `/flowaudit` | Does the EXPERIENCE work? | User journeys, state-machine integrity, dead ends, promise-vs-experience (runtime), error recovery paths, onboarding |
 | `/featureaudit` | Is the product COMPLETE? | PRD coverage, feature parity with competitors, inferred-vs-explicit PRD fallback, WebSearch-bounded parity research |
 | `/perfaudit` | Is it FAST enough? | Core Web Vitals measurement, bundle size, render timing, memory profiling, perf regressions vs baseline |
-| `/secaudit` | Is it SECURE? | OWASP Top 10 exploitation, XSS/SQLi/SSRF/IDOR probes, auth bypass, privilege escalation, rate-limit-safe fuzzing |
-| `/a11yaudit` | Is it ACCESSIBLE? | WCAG 2.1 AA, keyboard nav, ARIA, screen-reader automation, RTL/i18n layout, reduced-motion |
+| `/secaudit` | Is the PRODUCT secure? | Web OWASP 2021 inventory, LLM-app 2025 surfaces in-product, secrets, MCP-in-app. **No exploit PoCs.** |
+| `/agentaudit` | Is the HARNESS safe? | Untrusted fences, tool-call exfil, MCP supply chain, A2A confused deputy, tenancy, YOLO/gates, null session_id spawn, judges, memory poisoning |
+| `/a11yaudit` | Is it ACCESSIBLE? | WCAG 2.2 AA, keyboard nav, ARIA, screen-reader automation, RTL/i18n layout, reduced-motion |
 | `/seoaudit` | Is it DISCOVERABLE? | Crawlability, indexability, meta tags, Schema.org markup, GEO (AI-search optimization), content decay |
 | `/copyaudit` | Is the COPY clear? | Word-level tone, claim clarity (static), CTA text, jargon, banned-phrase scan, i18n wrapping |
 | `/dxaudit` | Is the DX smooth? | README quality (20-item rubric), setup time (external runner), error messages, dev-loop UX |
@@ -62,7 +63,8 @@ Some audits depend on others' outputs. Dispatch order matters when running them 
 
 ```
 /perfaudit   →  /seoaudit         (/seoaudit reads audits/.perfaudit/verdict.json for CWV scoring)
-/apiaudit    →  /secaudit         (/secaudit exploits the contract /apiaudit documented)
+/apiaudit    →  /secaudit         (/secaudit reviews the contract /apiaudit documented — inventory, no PoCs)
+/secaudit    →  /agentaudit       (optional parallel; agentaudit owns harness, secaudit owns in-app LLM/MCP)
 /codeaudit   →  /debugaudit       (fix code phantoms before looking for runtime bugs)
 /dataaudit   →  /apiaudit         (schema defines API response shape)
 /codeaudit   →  /dataaudit        (model types define schema)
@@ -233,7 +235,7 @@ Full routing table: `~/.claude/commands/ARSENAL-ORCHESTRATION-PLAYBOOK.md`.
 
 ## 9. THE META-LAW
 
-> **One doctrine, fourteen implementations, zero drift, fifteen lenses when /metaudit is included.**
+> **One doctrine, nineteen implementations, one AGK Audit face, zero same-session self-fix.**
 
 - One `QUALITY-ARSENAL-PREAMBLE.md` (shared doctrine)
 - Fourteen audit `.md` files (each with compliance block + 100/100 certificate)
@@ -276,7 +278,9 @@ Three gaps no current audit covers:
 | /cicdaudit | Build trends, DORA metrics, secret management, artifact caching | /dxaudit (static CI config) → runtime CI health |
 | /costaudit | Unbounded API calls, spend caps, runaway crons, serverless waste | No current audit covers billing exposure |
 
-Build when a project hits the gap. Not mandated.
+**Closed (2026-08):** harness/MCP/injection/tenancy → `/agentaudit` (do not add a 20th security audit).
+
+Build others when a project hits the gap. Not mandated.
 
 ---
 

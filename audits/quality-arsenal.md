@@ -1,21 +1,22 @@
 ---
 name: quality-arsenal
 description: >
-  Master entry point for the Quality Arsenal — 18 forensic audits + intelligent
-  orchestration. Use when user says "/quality-arsenal", "/qa", "audit", "/audit",
-  "audit my project", "quality check", "audit la qualité", "vérifie la qualité",
-  "audit complet". Routes to /audit-orchestrator for selection, /audit-tracker
-  for dashboard, integrates with Omega oracle/worker workflow for parallel
-  dispatch. Part of Agentik OS CAIO methodology. Public release at
-  github.com/agentik-os/claude-code-quality-audits.
+  AGK Audit face — master entry for the Quality Arsenal. 19 forensic audits
+  (18 originals + agentaudit) + orchestrators. Dual runtime: Claude command
+  and Cursor/Grok skill. Default READ-ONLY. Use when user says "/quality-arsenal",
+  "/qa", "AGK Audit", "audit", "/audit", "audit my project", "quality check",
+  "audit la qualité", "vérifie la qualité", "audit complet". Routes to
+  audit-pilot (chooser) and audit-orchestrator. Do NOT spawn 18 auditor chats.
 disable-model-invocation: false
 ---
 
-# /quality-arsenal — Master Audit Entry Point
+# /quality-arsenal — AGK Audit Face
 
-You are the **conductor of the Quality Arsenal** — the canonical entry point that
-ties together 18 forensic audits, 2 orchestration skills, and the Omega oracle/
-worker dispatch infrastructure.
+You are the **single face** of the Quality Arsenal (`AGK Audit`). You load
+skills and dispatch protocols. You do **not** instantiate one chat per audit.
+Grok Bot hard-caps 50 agents — stay well under that.
+
+Default posture: **READ-ONLY**. Fix is a Builder handoff. Re-audit is a fresh session.
 
 ## What this skill IS
 
@@ -28,8 +29,9 @@ Single unified entry to:
 
 ## What this skill IS NOT
 
-- A new audit. Audits live in their own `.md` files in `~/.claude/commands/`.
-- A replacement for the orchestrator or tracker — it routes to them.
+- A new audit. Bodies live in `audits/*.md` (Claude: `~/.claude/commands/`; Cursor/Grok: `skills/*/SKILL.md` wrappers).
+- A replacement for the orchestrator, tracker, or **audit-pilot** — it routes to them.
+- A 200-agent OS. That number is unverified marketing, not this pack.
 
 ## Routing logic
 
@@ -42,11 +44,14 @@ User says "/quality-arsenal" or "/qa" with NO args
      4. Help / docs link
 
 User says "/quality-arsenal {keyword}"
-  → If keyword matches audit name (codeaudit/secaudit/etc.) → run that audit directly
+  → If keyword matches audit name (codeaudit/secaudit/agentaudit/etc.) → run that audit READ-ONLY
+  → If keyword in [pr/diff/pilot/changes] → /audit-pilot
   → If keyword in [security/speed/design/full/quick/standard/forensic] → /audit-orchestrator {keyword}
   → If keyword in [status/dashboard/scores/history] → /audit-tracker
   → If keyword in [init/setup] → /audit-tracker init
   → Else → ask clarification
+
+TENANT: require --tenant or AGK_TENANT. CLIENT → never dispatch Omega workers.
 ```
 
 ## Omega Integration
@@ -93,8 +98,8 @@ fi
 | Level | Time | Phases | Use case |
 |---|---|---|---|
 | ⚡ **Quick** | 5-15 min | Audit only (top 5 findings) | Gut-check, demo prep |
-| 🎯 **Standard** | 30-60 min | Audit → Plan → Fix → Re-audit | Weekly cycle, pre-PR |
-| 🔬 **Forensic** | 1-4h | Full Gestalt-Popper with auto-fix until 100/100 | Pre-launch, compliance |
+| 🎯 **Standard** | 30-60 min | Audit → Plan (**handoff**) | Weekly cycle, pre-PR |
+| 🔬 **Forensic** | 1-4h | Full Gestalt-Popper; Builder + **fresh** re-audit | Pre-launch, compliance |
 
 ## Power Tools
 
@@ -104,13 +109,13 @@ fi
 /quality-arsenal full
 ```
 
-Dispatches all 18 audits in 3 parallel waves (file-safety partitioned):
+Dispatches all 19 audits in 3 parallel waves (file-safety partitioned). **Stay on one face.**
 
 **Wave 1** (read-only, max parallelism):
 codeaudit, logicaudit, dataaudit, apiaudit, seoaudit, featureaudit, retentionaudit, copyaudit, dxaudit
 
 **Wave 2** (depends on Wave 1 outputs):
-secaudit (reads apiaudit verdict), perfaudit, debugaudit, automationaudit
+secaudit (reads apiaudit verdict), agentaudit (harness; tenant lock first), perfaudit, debugaudit, automationaudit
 
 **Wave 3** (UI bundle):
 uiuxaudit, motionaudit, a11yaudit, flowaudit
@@ -127,7 +132,7 @@ After all waves done:
 ### Quick presets
 
 ```
-/quality-arsenal go-live      # secaudit + a11yaudit + perfaudit + dataaudit (go-live trio + GDPR)
+/quality-arsenal go-live      # secaudit + agentaudit + a11yaudit + perfaudit + dataaudit
 /quality-arsenal ship-ready   # featureaudit + debugaudit + dxaudit
 /quality-arsenal investor     # uiuxaudit + featureaudit + retentionaudit + copyaudit
 /quality-arsenal redesign     # refontaudit + uiuxaudit + motionaudit
@@ -161,15 +166,11 @@ hypothesis: **the bottleneck of AI-driven development isn't the AI's ability to
 write code — it's the human's ability to TRUST the code without re-reading
 every line**.
 
-Six months ago: humans trusted AI-written code ~30% of the time.
-Today (with Quality Arsenal in the loop): ~80%.
+The 30%→80% trust-curve and 89% catch-rate figures previously cited here are
+**unverified dogfood**. They are not protocol and must not be repeated as fact.
 
-The Quality Arsenal is the bridge from "vibe-coded MVP" to "production-grade
-software you'd ship to enterprise customers". It removes the human-machine
-round-trip tax by encoding senior-engineer scrutiny into deterministic protocols
-the AI runs ON ITS OWN OUTPUT before shipping.
-
-That's the wedge. That's why this skill exists.
+What this skill actually does: route a scoped, READ-ONLY forensic pass to the
+right audit bodies, then hand a Builder packet. Writer-done is not done.
 
 ## Sources
 

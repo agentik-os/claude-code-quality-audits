@@ -33,12 +33,14 @@ Every skill created by /newcmd carries the same DNA. Not because of bureaucracy 
 
 ## SKILL TYPES & QUALITY DNA
 
-### TYPE 1: FORENSIC AUDIT (scored, multi-phase, auto-fix)
+### TYPE 1: FORENSIC AUDIT (scored, multi-phase, READ-ONLY default)
 
 ```
-Examples: /codeaudit, /debugaudit, /perfaudit, /secaudit
+Examples: /codeaudit, /debugaudit, /perfaudit, /secaudit, /agentaudit
 DNA: Gestalt + Popper
-Structure: 15-25 phases, scoring /300-450, auto-fix, re-audit
+Structure: 15-25 phases, scoring /300-450, Plan + Builder handoff
+AGK Audit has no --fix path. Apply is a different agent (Builder). Re-audit = fresh session.
+Also emit skills/<name>/SKILL.md wrapper (do not duplicate the 500-800 line body).
 ```
 
 ### TYPE 2: CREATIVE PIPELINE (multi-stage, iterative)
@@ -182,11 +184,11 @@ Each phase scored 0-10, weighted by user impact.
 Total 300-450 points. Normalized to /100. Letter grade S-F.
 ```
 
-### AUDIT-DNA-3: AUTO-FIX PIPELINE
+### AUDIT-DNA-3: PLAN + HANDOFF (not same-session auto-fix)
 ```
-Phase N+1: Generate fix plan (prioritized by severity)
-Phase N+2: Execute fixes (sequential, with rollback)  
-Phase N+3: Re-audit (verify fixes, detect regressions)
+Phase N+1: Generate fix plan (prioritized by severity) — Builder packet
+Phase N+2: Do NOT execute. AGK Audit has no apply path. Builder is a different agent.
+Phase N+3: Re-audit in a FRESH session after a Builder lands
 ```
 
 ### AUDIT-DNA-4: PARALLEL EXECUTION
